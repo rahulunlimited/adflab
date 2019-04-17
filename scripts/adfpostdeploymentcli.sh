@@ -10,6 +10,7 @@ dataLakeName="$PROJECTPREFIX"datalake
 fnAppName="$PROJECTPREFIX"fnApp
 umiName="$PROJECTPREFIX"umi
 adfName="$PROJECTPREFIX"adf
+sqlServerName="$PROJECTPREFIX"sql
 
 scope="/subscriptions/$SUBSCRIPTIONID/resourceGroups/$RESOURCEGROUP/providers/Microsoft.Storage/storageAccounts/$dataLakeName"
 
@@ -64,4 +65,7 @@ az keyvault set-policy --name $keyVaultName --object-id $fnAppId --secret-permis
 
 #########################Assing Role for Data Lake#################################
 az role assignment create --role "Storage BLOB Data Contributor" --assignee-object-id $appObjectId --scope $scope
+
+
+#########################Restore Database#########################################
 
