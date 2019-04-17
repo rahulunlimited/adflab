@@ -11,7 +11,8 @@
             "defaultValue": "adflab"
         },
         "directory-id": {
-            "type": "string"
+            "type": "string",
+            "defaultValue": "3db0dd8c-ea66-4493-81cc-74962d452386"
         },
         "sqlserverAdminLogin": {
             "type": "string",
@@ -21,10 +22,12 @@
             "type": "securestring"
         },
         "onpremSourceServer": {
-            "type": "string"
+            "type": "string",
+            "defaultValue": "WSLVEL155"
         },
         "onpremSourceDatabase": {
-            "type": "string"
+            "type": "string",
+            "defaultValue": "AdventureWorks2014"
         },
         "onpremSourceUserID": {
             "type": "string",
