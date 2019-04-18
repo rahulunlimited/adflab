@@ -1,7 +1,7 @@
 ################### 01 - Assign Global Variables
 SUBSCRIPTIONID="5f454d76-f1a1-4e10-ba09-e6cc9296f7e2"
-RESOURCEGROUP="RG-Linx"
-PROJECTPREFIX="vladf01"
+RESOURCEGROUP="RG-ADF"
+PROJECTPREFIX="vladflab1"
 
 sqlADFLabDB="adflab"
 sqlADFUser="veladmin"
@@ -16,6 +16,10 @@ adfName="$PROJECTPREFIX"adf
 sqlServerName="$PROJECTPREFIX"sql
 
 scope="/subscriptions/$SUBSCRIPTIONID/resourceGroups/$RESOURCEGROUP/providers/Microsoft.Storage/storageAccounts/$dataLakeName"
+
+#User
+az keyvault set-policy --name $keyVaultName --upn "Rahul.Agrawal@velrada.com" --secret-permissions get list set
+
 
 ################### 03 - Import ADF 
 az group deployment create --resource-group $RESOURCEGROUP --template-uri https://raw.githubusercontent.com/rahulunlimited/adflab/master/adf/azuredeploy.json --parameters factoryName=$adfName
