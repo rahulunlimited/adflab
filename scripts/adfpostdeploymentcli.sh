@@ -1,7 +1,10 @@
 ################### 01 - Assign Global Variables
 SUBSCRIPTIONID="5f454d76-f1a1-4e10-ba09-e6cc9296f7e2"
-RESOURCEGROUP="RGADF"
+RESOURCEGROUP="RG-Linx"
 PROJECTPREFIX="vladf01"
+
+sqlADFLabDB="adflab"
+sqlADFUser="veladmin"
 
 ################### 02 - Assign Resource Variables
 keyVaultName="$PROJECTPREFIX"kv
@@ -68,4 +71,31 @@ az role assignment create --role "Storage BLOB Data Contributor" --assignee-obje
 
 
 #########################Restore Database#########################################
+dbWideWorldImporters="WideWorldImporters"
+az sql db create -g $RESOURCEGROUP -s $sqlServerName -n $dbWideWorldImporters --service-objective S4
+
+pwdSQLAdmin=$(az keyvault secret show --name db-adflab-password --vault-name $keyVaultName --query value -o tsv)
+echo $pwdSQLAdmin
+
+storageKey=$(az storage account keys list --account-name vlrlearnstore --query [0].value -o tsv)
+echo $storageKey
+
+az sql db import -s $sqlServerName -n $dbWideWorldImporters -g $RESOURCEGROUP -p $pwdSQLAdmin -u $sqlADFUser --storage-key $storageKey --storage-key-type StorageAccessKey --storage-uri https://vlrlearnstore.blob.core.windows.net/sqldb/WideWorldImporters-Standard.bacpac
+
+az sql db update -g $RESOURCEGROUP -s $sqlServerName -n $dbWideWorldImporters --service-objective S0
+
+az sql db update -g $RESOURCEGROUP -s $sqlServerName -n $sqlADFLabDB --service-objective S4
+
+az sql db import -s $sqlServerName -n $sqlADFLabDB -g $RESOURCEGROUP -p $pwdSQLAdmin -u $sqlADFUser --storage-key $storageKey --storage-key-type StorageAccessKey --storage-uri https://vlrlearnstore.blob.core.windows.net/sqldb/adflab.bacpac
+
+az sql db update -g $RESOURCEGROUP -s $sqlServerName -n $sqlADFLabDB --service-objective S0
+
+#########################File Share#####################################################
+storageConnStr=$(az keyvault secret show --name blob-connection-string --vault-name $keyVaultName --query value -o tsv)
+echo $storageConnStr
+
+az storage directory create --name src -s fshare --connection-string $storageConnStr
+az storage directory create --name dest -s fshare --connection-string $storageConnStr
+
+az storage file upload -s fshare --source ~/clouddrive/adflab/fileshare/AUS-State.csv --connection-string $storageConnStr -p src
 
