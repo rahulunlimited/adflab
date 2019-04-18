@@ -74,14 +74,14 @@
         "datalakename": "[concat(parameters('project-prefix'), 'datalake')]",
         "adfkeyVaultName": "[concat(parameters('project-prefix'),'kv')]",
         "adfstorageName": "[concat(parameters('project-prefix'),'storage')]",
-        "adfsqlserverName": "[concat(parameters('project-prefix'),'sql01')]",
+        "adfsqlserverName": "[concat(parameters('project-prefix'),'sql')]",
         "adfDataFactoryName": "[concat(parameters('project-prefix'),'adf')]",
         "hostingPlanName": "[concat(parameters('project-prefix'),'hostingplan')]",
         "functionAppName": "[concat(parameters('project-prefix'),'fnapp')]",
         "dbWorkspaceName": "[concat(parameters('project-prefix'),'databricks')]",
         "containerInstanceName": "[concat(parameters('project-prefix'),'-containerinstance')]",
         "managedResourceGroupName": "[concat('databricks-rg-', parameters('project-prefix'), '-', uniqueString(parameters('project-prefix'), resourceGroup().id))]",
-        "onpremconnstr": "[concat('integrated security=False;data source=',parameters('onpremSourceServer'), ';initial catalog=', parameters('onpremSourceServer'), ';user id=', parameters('onpremSourceUserID'), ';password=', parameters('onpremSourcePassword'))]"
+        "onpremconnstr": "[concat('integrated security=False;data source=',parameters('onpremSourceServer'), ';initial catalog=', parameters('onpremSourceDatabase'), ';user id=', parameters('onpremSourceUserID'), ';password=', parameters('onpremSourcePassword'))]"
 
     },
 
@@ -389,7 +389,7 @@
 
         {
             "type": "Microsoft.KeyVault/vaults/secrets",
-            "name": "[concat(variables('adfkeyVaultName'), '/', 'db-target-password')]",
+            "name": "[concat(variables('adfkeyVaultName'), '/', 'db-adflab-password')]",
             "apiVersion": "2015-06-01",
             "properties": {
                 "contentType": "text/plain",
@@ -401,7 +401,7 @@
         },
         {
             "type": "Microsoft.KeyVault/vaults/secrets",
-            "name": "[concat(variables('adfkeyVaultName'), '/', 'db-target-username')]",
+            "name": "[concat(variables('adfkeyVaultName'), '/', 'db-adflab-username')]",
             "apiVersion": "2015-06-01",
             "properties": {
                 "contentType": "text/plain",
@@ -470,7 +470,7 @@
             "apiVersion": "2015-06-01",
             "properties": {
                 "contentType": "text/plain",
-                "value": "[concat('Integrated Security=False;Encrypt=True;Connection Timeout=30;', 'Data Source=', variables('adfsqlserverName'), '.database.windows.net;', 'Initial Catalog=WideWorldImporters-Standard;', 'User ID=', parameters('sqlserverAdminLogin'), ';Password=', parameters('sqlserverAdminPassword'))]"
+                "value": "[concat('Integrated Security=False;Encrypt=True;Connection Timeout=30;', 'Data Source=', variables('adfsqlserverName'), '.database.windows.net;', 'Initial Catalog=WideWorldImporters;', 'User ID=', parameters('sqlserverAdminLogin'), ';Password=', parameters('sqlserverAdminPassword'))]"
             },
             "dependsOn": [
                 "[resourceId('Microsoft.KeyVault/vaults', variables('adfkeyVaultName'))]"
@@ -479,7 +479,7 @@
 
         {
             "type": "Microsoft.KeyVault/vaults/secrets",
-            "name": "[concat(variables('adfkeyVaultName'), '/', 'dl-app-id')]",
+            "name": "[concat(variables('adfkeyVaultName'), '/', 'app-adflab-id')]",
             "apiVersion": "2015-06-01",
             "properties": {
                 "contentType": "text/plain",
@@ -492,7 +492,7 @@
 
         {
             "type": "Microsoft.KeyVault/vaults/secrets",
-            "name": "[concat(variables('adfkeyVaultName'), '/', 'dl-app-key-databricks')]",
+            "name": "[concat(variables('adfkeyVaultName'), '/', 'app-adflab-secret')]",
             "apiVersion": "2015-06-01",
             "properties": {
                 "contentType": "text/plain",
@@ -547,7 +547,7 @@
 
         {
             "type": "Microsoft.KeyVault/vaults/secrets",
-            "name": "[concat(variables('adfkeyVaultName'), '/', 'db-target-connstr')]",
+            "name": "[concat(variables('adfkeyVaultName'), '/', 'db-adflab-connstr')]",
             "apiVersion": "2015-06-01",
             "properties": {
                 "contentType": "text/plain",
