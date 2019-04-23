@@ -14,6 +14,7 @@ fnAppName="$PROJECTPREFIX"fnApp
 umiName="$PROJECTPREFIX"umi
 adfName="$PROJECTPREFIX"adf
 sqlServerName="$PROJECTPREFIX"sql
+storageName="$PROJECTPREFIX"storage
 
 scope="/subscriptions/$SUBSCRIPTIONID/resourceGroups/$RESOURCEGROUP/providers/Microsoft.Storage/storageAccounts/$dataLakeName"
 
@@ -22,7 +23,11 @@ az keyvault set-policy --name $keyVaultName --upn "Rahul.Agrawal@velrada.com" --
 
 
 ################### 03 - Import ADF 
-az group deployment create --resource-group $RESOURCEGROUP --template-uri https://raw.githubusercontent.com/rahulunlimited/adflab/master/adf/azuredeploy.json --parameters factoryName=$adfName
+keyVaultURL="https://$keyVaultName.vault.azure.net/"
+ADLSURL="https://$dataLakeName.dfs.core.windows.net"
+fileStorageUserId="AZURE\\$storageName"
+
+az group deployment create --resource-group $RESOURCEGROUP --template-uri https://raw.githubusercontent.com/rahulunlimited/adflab/master/adf/azuredeploy.json --parameters factoryName=$adfName LinkedServiceAzureKeyVault_properties_typeProperties_baseUrl=$keyVaultURL LinkedServiceAzureDLGen2Storage_properties_typeProperties_url=$ADLSURL LinkedServiceAzureFileStorage_properties_typeProperties_userId=$fileStorageUserId
 
 ################### 04 - Import Function App
 az functionapp deployment source config-zip -g $RESOURCEGROUP -n $fnAppName --src ~/clouddrive/adflab/fnapp/AzFnFileService.zip
