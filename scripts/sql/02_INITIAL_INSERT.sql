@@ -50,12 +50,14 @@ INSERT INTO [UTIL].[DataLoadMetadata] (
 	,[TargetFolder]
 	,[PrefixDateTime]
 	,[IncrementalLoadFlag]
+	,[ColumnDelimiter]
+	,[RowDelimiter]
 	,[IncrementalLoadColumn]
 	,[IncrementalLoadColumnType])
 VALUES 
-(@CTR + 1, 'Table', 'Src-OnPrem', 'AdventureWorks2014', 'HumanResources', 'Department', NULL, 'Datalake',  'HumanResources_Department', 'HRDepartment', 1, 0, NULL, NULL), 
-(@CTR + 2, 'Table', 'Src-OnPrem', 'AdventureWorks2014', 'Production', 'WorkOrder', NULL, 'Datalake',  'WorkOrder', 'WorkOrder', 1, 1, 'ModifiedDate', 'DATE'),
-(@CTR + 3, 'Table', 'Src-Azure', 'WideWorldImporters', 'Sales', 'Invoices', NULL, 'Datalake',  'Invoices', 'Sales', 1, 1, 'LastEditedWhen', 'DATE')
+(@CTR + 1, 'Table', 'Src-OnPrem', 'AdventureWorks2014', 'HumanResources', 'Department', NULL, 'Datalake',  'HumanResources_Department', 'HRDepartment', 1, 0, ',', '\r\n', NULL, NULL), 
+(@CTR + 2, 'Table', 'Src-OnPrem', 'AdventureWorks2014', 'Production', 'WorkOrder', NULL, 'Datalake',  'WorkOrder', 'WorkOrder', 1, 1, ',', '\r\n',  'ModifiedDate', 'DATE'),
+(@CTR + 3, 'Table', 'Src-Azure', 'WideWorldImporters', 'Sales', 'Invoices', NULL, 'Datalake',  'Invoices', 'Sales', 1, 1, '|', '\r\n',  'LastEditedWhen', 'DATE')
 
 GO
 
@@ -106,10 +108,11 @@ INSERT INTO [UTIL].[DataLoadMetadata] (
 	,[TransformationSP]
 	,[IncrementalLoadFlag]
 	,[SourceFolder]
+	,[ColumnDelimiter]
 )
 
 VALUES 
-(@CTR + 1, 'Datalake', 'ADLSG2', 'WorkOrder', 'Table', 'STG', 'EXT_WorkOrder', NULL, 1, 'WorkOrder'),
-(@CTR + 2, 'Datalake', 'ADLSG2', 'Invoices', 'Table', 'STG', 'EXT_Invoices', NULL, 1, 'Sales')
+(@CTR + 1, 'Datalake', 'ADLSG2', 'WorkOrder', 'Table', 'STG', 'EXT_WorkOrder', NULL, 1, 'WorkOrder', ','),
+(@CTR + 2, 'Datalake', 'ADLSG2', 'Invoices', 'Table', 'STG', 'EXT_Invoices', NULL, 1, 'Sales', '|')
 
 SELECT * FROM UTIL.vDataLoadMetadata

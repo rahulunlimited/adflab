@@ -1,8 +1,8 @@
 ################### 01 - Assign Global Variables
 #******PLEASE UPDATE THIS****************
 SUBSCRIPTIONID="5f454d76-f1a1-4e10-ba09-e6cc9296f7e2"
-RESOURCEGROUP="RG-ADF"
-PROJECTPREFIX="vlx1"
+RESOURCEGROUP="ADFlab"
+PROJECTPREFIX="vladf01"
 
 ################### 02 - Assign Resource Variables
 #******PLEASE DO NOT UPDATE INFORMATION BELOW THIS SECTION****************
@@ -28,7 +28,7 @@ fileStorageUserId="AZURE\\$storageName"
 #Select the template from GitHub repo
 #Pass parameter for Data Factory
 #Other params = KeyVault URL, ADLS URL, File Storage UserID
-az group deployment create --resource-group $RESOURCEGROUP --template-uri https://raw.githubusercontent.com/rahulunlimited/adflab/master/adf/azuredeploy.json --parameters factoryName=$adfName LinkedServiceAzureKeyVault_properties_typeProperties_baseUrl=$keyVaultURL LinkedServiceAzureDLGen2Storage_properties_typeProperties_url=$ADLSURL LinkedServiceAzureFileStorage_properties_typeProperties_userId=$fileStorageUserId
+az group deployment create --resource-group $RESOURCEGROUP --template-uri https://raw.githubusercontent.com/rahulunlimited/adflab/master/adf/arm_template.json --parameters factoryName=$adfName LinkedServiceAzureKeyVault_properties_typeProperties_baseUrl=$keyVaultURL LinkedServiceAzureDLGen2Storage_properties_typeProperties_url=$ADLSURL LinkedServiceAzureFileStorage_properties_typeProperties_userId=$fileStorageUserId
 
 ################### 04 - Import Function App
 #Import Function App from the Cloudshell storage in Zip format
