@@ -1,0 +1,42 @@
+{
+    "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentParameters.json#",
+    "contentVersion": "1.0.0.0",
+    "parameters": {
+        "factoryName": {
+            "value": "vlx1adf"
+        },
+        "DSDataLakeGeneral_properties_typeProperties_fileName": {
+            "value": "@dataset().filename"
+        },
+        "DSDataLakeGeneral_properties_typeProperties_folderPath": {
+            "value": "@{concat(dataset().container, '/', dataset().folder)}"
+        },
+        "DSTextFileGeneral_properties_typeProperties_fileName": {
+            "value": "@dataset().fileName"
+        },
+        "DSTextFileGeneral_properties_typeProperties_folderPath": {
+            "value": "@dataset().folderPath"
+        },
+        "LinkedServiceAzureKeyVault_properties_typeProperties_baseUrl": {
+            "value": "https://vlx1kv.vault.azure.net/"
+        },
+        "LinkedServiceTargetDatabase_properties_typeProperties_connectionString_secretName": {
+            "value": "db-adflab-connstr"
+        },
+        "LinkedServiceSourceOnPremDatabase_properties_typeProperties_connectionString_secretName": {
+            "value": "db-source-onprem-connstr"
+        },
+        "LinkedServiceAzureBlobStorage_properties_typeProperties_connectionString_secretName": {
+            "value": "blob-connection-string"
+        },
+        "LinkedServiceAzureFileStorage_properties_typeProperties_userId": {
+            "value": "AZURE\\vlx1storage"
+        },
+        "LinkedServiceSourceAzureDatabase_properties_typeProperties_connectionString_secretName": {
+            "value": "db-source-azure-connstr"
+        },
+        "LinkedServiceAzureDLGen2Storage_properties_typeProperties_url": {
+            "value": "https://vlx1datalake.dfs.core.windows.net"
+        }
+    }
+}
