@@ -1,8 +1,8 @@
 ################### 01 - Assign Global Variables
 #******PLEASE UPDATE THIS****************
 SUBSCRIPTIONID="5f454d76-f1a1-4e10-ba09-e6cc9296f7e2"
-RESOURCEGROUP="ADFlab"
-PROJECTPREFIX="vladf01"
+RESOURCEGROUP="RG-ADF"
+PROJECTPREFIX="vlr1"
 
 ################### 02 - Assign Resource Variables
 #******PLEASE DO NOT UPDATE INFORMATION BELOW THIS SECTION****************
@@ -46,6 +46,8 @@ az ad app create --display-name $appName --identifier-uris $appURL --homepage $a
 #Get App ID
 appId=$(az ad app list --display-name $appName --query [].appId -o tsv)
 echo $appId
+#Add AppID to KeyVault
+az keyvault secret set --vault-name $keyVaultName --name 'app-adflab-id' --value "$appId"
 ###Assign Permissions to App
 #Assign User Impersonation for Data Lake
 az ad app permission add --id $appId --api e9f49c6b-5ce5-44c8-925d-015017e9f7ad --api-permission 9f15d22d-3cdf-430f-ba48-f75401c0408e=Scope
@@ -59,6 +61,11 @@ echo $appObjectId
 #Get the Service Principal Id from the ObjectId
 servicePrincipalAppId=$(az ad sp list --display-name $appName --query "[].appId" -o tsv)
 echo $servicePrincipalAppId
+#Create a new app secret secret
+appSecret=$(az ad app credential reset --id $appId --credential-description adflab --query password -o tsv)
+#Add App Secret to KeyVault
+az keyvault secret set --vault-name $keyVaultName --name 'app-adflab-secret' --value "$appSecret"
+
 
 ##################### Assign Role for KeyVault
 #App
