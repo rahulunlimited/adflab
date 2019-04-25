@@ -61,8 +61,8 @@ echo $appObjectId
 #Get the Service Principal Id from the ObjectId
 servicePrincipalAppId=$(az ad sp list --display-name $appName --query "[].appId" -o tsv)
 echo $servicePrincipalAppId
-#Create a new app secret secret
-appSecret=$(az ad app credential reset --id $appId --credential-description adflab --query password -o tsv)
+#Create a new app secret for 5 years validity
+appSecret=$(az ad app credential reset --id $appId --credential-description adflab --years 5 --query password -o tsv)
 #Add App Secret to KeyVault
 az keyvault secret set --vault-name $keyVaultName --name 'app-adflab-secret' --value "$appSecret"
 
