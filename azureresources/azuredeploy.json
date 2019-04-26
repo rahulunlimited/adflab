@@ -3,8 +3,7 @@
     "contentVersion": "1.0.0.0",
     "parameters": {
         "project-prefix": {
-            "type": "string",
-            "defaultValue": "vladf01"
+            "type": "string"
         },
         "adf-database-name": {
             "type": "string",
@@ -58,6 +57,7 @@
                 "S0",
                 "S1",
                 "S2",
+                "S4",
                 "P1",
                 "P2",
                 "P3"
