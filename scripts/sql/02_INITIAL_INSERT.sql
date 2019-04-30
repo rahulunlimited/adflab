@@ -23,10 +23,18 @@ VALUES
 (@CTR + 1, 'Table', 'Src-OnPrem', 'AdventureWorks2014', 'HumanResources', 'Department', NULL, 'Table',  'STG', 'HumanResources_Department', NULL, 0, NULL, NULL), 
 (@CTR + 2, 'Table', 'Src-OnPrem', 'AdventureWorks2014', 'Production', 'WorkOrder', NULL, 'Table',  'STG', 'Production_WorkOrder', NULL, 1, 'ModifiedDate', 'DATE'), 
 (@CTR + 3, 'Table', 'Src-Azure', 'WideWorldImporters', 'Application', 'Cities', 'SELECT [CityID] ,[CityName] ,[StateProvinceID] ,CONVERT(varbinary(4000), [Location]) [Location] ,LatestRecordedPopulation ,[LastEditedBy] ,[ValidFrom] ,[ValidTo] FROM [Application].[Cities]', 'Table',  'STG', 'Application_Cities', NULL, 0, NULL, NULL),
-(@CTR + 5, 'Table', 'Src-Azure', 'WideWorldImporters', 'Application', 'StateProvinces', NULL, 'Table',  'STG', 'Application_StateProvinces', NULL, 0, NULL, NULL), 
-(@CTR + 6, 'Table', 'Src-Azure', 'WideWorldImporters', 'Application', 'Countries', NULL, 'Table',  'STG', 'Application_Countries', NULL, 0, NULL, NULL), 
-(@CTR + 7, 'Table', 'Src-Azure', 'WideWorldImporters', 'Application', 'DeliveryMethods', NULL, 'Table',  'STG', 'Application_DeliveryMethods', NULL, 0, NULL, NULL),
-(@CTR + 8, 'Table', 'Src-Azure', 'WideWorldImporters', 'Application', 'CitiesNY', 'SELECT  C.*
+(@CTR + 4, 'Table', 'Src-Azure', 'WideWorldImporters', 'Application', 'StateProvinces', 'SELECT S.[StateProvinceID]
+      ,S.[StateProvinceCode]
+      ,S.[StateProvinceName]
+      ,C.IsoAlpha3Code AS CountryCode
+      ,S.[SalesTerritory]
+      ,S.[Border]
+      ,S.[LatestRecordedPopulation]
+  FROM [Application].[StateProvinces] S
+  LEFT JOIN [Application].Countries C ON S.CountryID = C.CountryID', 'Table',  'STG', 'Application_StateProvinces', NULL, 0, NULL, NULL), 
+(@CTR + 5, 'Table', 'Src-Azure', 'WideWorldImporters', 'Application', 'Countries', NULL, 'Table',  'STG', 'Application_Countries', NULL, 0, NULL, NULL), 
+(@CTR + 6, 'Table', 'Src-Azure', 'WideWorldImporters', 'Application', 'DeliveryMethods', NULL, 'Table',  'STG', 'Application_DeliveryMethods', NULL, 0, NULL, NULL),
+(@CTR + 7, 'Table', 'Src-Azure', 'WideWorldImporters', 'Application', 'CitiesNY', 'SELECT  C.*
 FROM [Application].Cities C
 INNER JOIN [Application].StateProvinces S ON S.StateProvinceID = C.StateProvinceID
 WHERE StateProvinceName = ''New York''', 'Table',  'STG', 'Application_Cities_NY', NULL, 0, NULL, NULL)
