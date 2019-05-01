@@ -48,7 +48,7 @@ INSERT INTO [UTIL].[DataLoadMetadata] (
 	,[BatchSequence]
 	,[RunSequence])
 VALUES 
-(@CTR + 1, 'Table', 'Src-Azure', 'WideWorldImporters', 'Application', 'Countries', NULL, 'Table',  'STG', 'Application_Countries', 'dbo.sp_spLoad_Country', 0, NULL, NULL, 0, 1, 1), 
+(@CTR + 1, 'Table', 'Src-Azure', 'WideWorldImporters', 'Application', 'Countries', NULL, 'Table',  'STG', 'Application_Countries', 'dbo.spLoad_Country', 0, NULL, NULL, 0, 1, 1), 
 (@CTR + 2, 'Table', 'Src-Azure', 'WideWorldImporters', 'Application', 'StateProvinces', NULL, 'Table',  'STG', 'Application_StateProvinces', 'dbo.spLoad_StateProvince', 0, NULL, NULL, 0, 1, 2), 
 (@CTR + 3, 'Table', 'Src-Azure', 'WideWorldImporters', 'Application', 'Cities', 'SELECT [CityID] ,[CityName] ,[StateProvinceID] ,CONVERT(varbinary(4000), [Location]) [Location] ,LatestRecordedPopulation ,[LastEditedBy] ,[ValidFrom] ,[ValidTo] FROM [Application].[Cities]', 'Table',  'STG', 'Application_Cities', NULL, 0, NULL, NULL, 0, 1, 3),
 (@CTR + 4, 'Table', 'Src-Azure', 'WideWorldImporters', 'Application', 'CitiesNY', 'SELECT  C.*
