@@ -100,7 +100,7 @@
                                 },
                                 "Message": {
                                     "value": {
-                                        "value": "@{pipeline().parameters.SourceObject}",
+                                        "value": "@concat(pipeline().parameters.SourceSchema, '.', pipeline().parameters.SourceTable)",
                                         "type": "Expression"
                                     },
                                     "type": "String"
@@ -135,7 +135,7 @@
                             "source": {
                                 "type": "SqlSource",
                                 "sqlReaderQuery": {
-                                    "value": "SELECT * FROM UTIL.vDataLoadMetadata WHERE SourceType = 'TABLE' AND TargetType = 'DATALAKE' AND SourceSystem = '@{pipeline().parameters.SourceSystem}' AND SourceSchema = '@{pipeline().parameters.SourceSchema}' AND SourceObject = '@{pipeline().parameters.SourceObject}'",
+                                    "value": "SELECT * FROM UTIL.vDataLoadMetaData_FromTable_ToFile WHERE TargetSystem = 'ADLS' AND SourceSystem = '@{pipeline().parameters.SourceSystem}' AND SourceSchema = '@{pipeline().parameters.SourceSchema}' AND SourceTable = '@{pipeline().parameters.SourceTable}'",
                                     "type": "Expression"
                                 }
                             },
@@ -249,7 +249,7 @@
                                                     "type": "Expression"
                                                 },
                                                 "filename": {
-                                                    "value": "@concat(utcnow('yyyyMMddHHmmss'), '_' , activity('LU-Metadata').output.firstRow.TargetObject, '.csv')",
+                                                    "value": "@concat(utcnow('yyyyMMddHHmmss'), '_' , activity('LU-Metadata').output.firstRow.TargetFilePrefix, '.csv')",
                                                     "type": "Expression"
                                                 },
                                                 "columnDelimiter": "@activity('LU-Metadata').output.firstRow.ColumnDelimiter",
@@ -294,13 +294,6 @@
                                     "typeProperties": {
                                         "storedProcedureName": "[concat('[', 'UTIL].[spUpdateLastExtraction]')]",
                                         "storedProcedureParameters": {
-                                            "ExecutionTime": {
-                                                "value": {
-                                                    "value": "@pipeline().TriggerTime",
-                                                    "type": "Expression"
-                                                },
-                                                "type": "DateTime"
-                                            },
                                             "LastExtractionCounter": {
                                                 "value": {
                                                     "value": "@variables('LastExtractionCounter')",
@@ -320,21 +313,7 @@
                                                     "value": "@{activity('LU-Metadata').output.firstRow.RecordID}",
                                                     "type": "Expression"
                                                 },
-                                                "type": "Int32"
-                                            },
-                                            "IncrementalLoadFlag": {
-                                                "value": {
-                                                    "value": "@activity('LU-Metadata').output.firstRow.IncrementalLoadFlag",
-                                                    "type": "Expression"
-                                                },
-                                                "type": "Boolean"
-                                            },
-                                            "Message": {
-                                                "value": {
-                                                    "value": "@activity('LU-Metadata').output.firstRow.SourceObject",
-                                                    "type": "Expression"
-                                                },
-                                                "type": "String"
+                                                "type": "Guid"
                                             }
                                         }
                                     },
@@ -546,7 +525,7 @@
                         "type": "String",
                         "defaultValue": "Production"
                     },
-                    "SourceObject": {
+                    "SourceTable": {
                         "type": "String",
                         "defaultValue": "WorkOrder"
                     }
@@ -621,7 +600,7 @@
                                 },
                                 "Message": {
                                     "value": {
-                                        "value": "@{pipeline().parameters.SourceObject}",
+                                        "value": "@{pipeline().parameters.SourceFile}",
                                         "type": "Expression"
                                     },
                                     "type": "String"
@@ -656,7 +635,7 @@
                             "source": {
                                 "type": "SqlSource",
                                 "sqlReaderQuery": {
-                                    "value": "SELECT * FROM UTIL.vDataLoadMetadata WHERE SourceType = 'DATALAKE' AND TargetType = 'TABLE' AND SourceSystem = '@{pipeline().parameters.SourceSystem}' AND SourceObject = '@{pipeline().parameters.SourceObject}' ",
+                                    "value": "SELECT * FROM UTIL.[vDataLoadMetaData_FromFile_ToTable] WHERE SourceSystem = '@{pipeline().parameters.SourceSystem}' AND SourceFile = '@{pipeline().parameters.SourceFile}' ",
                                     "type": "Expression"
                                 }
                             },
@@ -726,7 +705,7 @@
                             "notebookPath": "/ADF/Load-DataLake-AzureSQLDB",
                             "baseParameters": {
                                 "Entity": {
-                                    "value": "@activity('LU-Metadata').output.firstRow.SourceObject",
+                                    "value": "@activity('LU-Metadata').output.firstRow.SourceFile",
                                     "type": "Expression"
                                 }
                             }
@@ -740,11 +719,11 @@
                 "parameters": {
                     "SourceSystem": {
                         "type": "String",
-                        "defaultValue": "ADLSG2"
+                        "defaultValue": "ADLS"
                     },
-                    "SourceObject": {
+                    "SourceFile": {
                         "type": "String",
-                        "defaultValue": "LedgerEntry"
+                        "defaultValue": "Invoices"
                     }
                 },
                 "folder": {
@@ -801,7 +780,7 @@
                                 },
                                 "Message": {
                                     "value": {
-                                        "value": "@{pipeline().parameters.SourceObject}",
+                                        "value": "@{pipeline().parameters.SourceFile}",
                                         "type": "Expression"
                                     },
                                     "type": "String"
@@ -834,7 +813,7 @@
                             "source": {
                                 "type": "SqlSource",
                                 "sqlReaderQuery": {
-                                    "value": "SELECT * FROM UTIL.vDataLoadMetadata WHERE SourceType = 'FILE' AND TargetType = 'TABLE' AND SourceSystem = '@{pipeline().parameters.SourceSystem}' AND SourceObject = '@{pipeline().parameters.SourceObject}'",
+                                    "value": "SELECT * FROM UTIL.[vDataLoadMetaData_FromFile_ToTable] WHERE SourceSystem = '@{pipeline().parameters.SourceSystem}' AND SourceFile = '@{pipeline().parameters.SourceFile}'",
                                     "type": "Expression"
                                 }
                             },
@@ -882,7 +861,7 @@
                                             "type": "SqlSink",
                                             "writeBatchSize": 10000,
                                             "preCopyScript": {
-                                                "value": "TRUNCATE TABLE @{activity('LU-Metadata').output.firstRow.TargetTable}",
+                                                "value": "TRUNCATE TABLE @{activity('LU-Metadata').output.firstRow.TargetObject}",
                                                 "type": "Expression"
                                             }
                                         },
@@ -911,7 +890,7 @@
                                                     "type": "Expression"
                                                 },
                                                 "fileName": {
-                                                    "value": "@{activity('LU-Metadata').output.firstRow.SourceObject}",
+                                                    "value": "@{activity('LU-Metadata').output.firstRow.SourceFile}",
                                                     "type": "Expression"
                                                 }
                                             }
@@ -922,7 +901,10 @@
                                             "referenceName": "DSDBSinkGeneral",
                                             "type": "DatasetReference",
                                             "parameters": {
-                                                "SinkTableName": "@{activity('LU-Metadata').output.firstRow.TargetTable}"
+                                                "SinkTableName": {
+                                                    "value": "@{activity('LU-Metadata').output.firstRow.TargetObject}",
+                                                    "type": "Expression"
+                                                }
                                             }
                                         }
                                     ]
@@ -948,7 +930,7 @@
                                     "userProperties": [],
                                     "typeProperties": {
                                         "functionName": {
-                                            "value": "@concat('AzFnFileService?op=move&inputfolder=', activity('LU-Metadata').output.firstRow.SourceFolder, '&file=', activity('LU-Metadata').output.firstRow.SourceObject, '&targetfolder=', activity('LU-Metadata').output.firstRow.TargetFolder, '&PrefixDateTime=Y')",
+                                            "value": "@concat('AzFnFileService?op=move&inputfolder=', activity('LU-Metadata').output.firstRow.SourceFolder, '&file=', activity('LU-Metadata').output.firstRow.SourceFile, '&targetfolder=', activity('LU-Metadata').output.firstRow.ArchiveFolder, '&PrefixDateTime=Y')",
                                             "type": "Expression"
                                         },
                                         "method": "GET",
@@ -981,7 +963,7 @@
                             },
                             "ifTrueActivities": [
                                 {
-                                    "name": "SP-INTLoad",
+                                    "name": "SP-Transform",
                                     "description": "Load data to INT table",
                                     "type": "SqlServerStoredProcedure",
                                     "dependsOn": [],
@@ -1066,7 +1048,7 @@
                         ],
                         "typeProperties": {
                             "functionName": {
-                                "value": "@concat('AzFnFileService?op=exist&inputfolder=', activity('LU-Metadata').output.firstRow.SourceFolder, '&file=', activity('LU-Metadata').output.firstRow.SourceObject)",
+                                "value": "@concat('AzFnFileService?op=exist&inputfolder=', activity('LU-Metadata').output.firstRow.SourceFolder, '&file=', activity('LU-Metadata').output.firstRow.SourceFile)",
                                 "type": "Expression"
                             },
                             "method": "GET",
@@ -1082,9 +1064,9 @@
                 "parameters": {
                     "SourceSystem": {
                         "type": "String",
-                        "defaultValue": "Local"
+                        "defaultValue": "Az-FileStorage"
                     },
-                    "SourceObject": {
+                    "SourceFile": {
                         "type": "String",
                         "defaultValue": "AUS-State.csv"
                     }
@@ -1146,7 +1128,7 @@
                                 },
                                 "Message": {
                                     "value": {
-                                        "value": "@{pipeline().parameters.SourceObject}",
+                                        "value": "@concat(pipeline().parameters.SourceSchema, '.', pipeline().parameters.SourceTable)",
                                         "type": "Expression"
                                     },
                                     "type": "String"
@@ -1181,7 +1163,7 @@
                             "source": {
                                 "type": "SqlSource",
                                 "sqlReaderQuery": {
-                                    "value": "SELECT * FROM UTIL.vDataLoadMetadata WHERE SourceType = 'TABLE' AND TargetType = 'DATALAKE' AND SourceSystem = '@{pipeline().parameters.SourceSystem}' AND SourceSchema = '@{pipeline().parameters.SourceSchema}' AND SourceObject = '@{pipeline().parameters.SourceObject}'",
+                                    "value": "SELECT * FROM UTIL.vDataLoadMetaData_FromTable_ToFile WHERE TargetSystem = 'ADLS' AND SourceSystem = '@{pipeline().parameters.SourceSystem}' AND SourceSchema = '@{pipeline().parameters.SourceSchema}' AND SourceTable = '@{pipeline().parameters.SourceTable}'",
                                     "type": "Expression"
                                 }
                             },
@@ -1292,7 +1274,7 @@
                                                     "type": "Expression"
                                                 },
                                                 "filename": {
-                                                    "value": "@concat(utcnow('yyyyMMddHHmmss'), '_' , activity('LU-Metadata').output.firstRow.TargetObject, '.csv')",
+                                                    "value": "@concat(utcnow('yyyyMMddHHmmss'), '_' , activity('LU-Metadata').output.firstRow.TargetFilePrefix, '.csv')",
                                                     "type": "Expression"
                                                 },
                                                 "columnDelimiter": "@activity('LU-Metadata').output.firstRow.ColumnDelimiter",
@@ -1337,13 +1319,6 @@
                                     "typeProperties": {
                                         "storedProcedureName": "[concat('[', 'UTIL].[spUpdateLastExtraction]')]",
                                         "storedProcedureParameters": {
-                                            "ExecutionTime": {
-                                                "value": {
-                                                    "value": "@pipeline().TriggerTime",
-                                                    "type": "Expression"
-                                                },
-                                                "type": "DateTime"
-                                            },
                                             "LastExtractionCounter": {
                                                 "value": {
                                                     "value": "@variables('LastExtractionCounter')",
@@ -1363,21 +1338,7 @@
                                                     "value": "@{activity('LU-Metadata').output.firstRow.RecordID}",
                                                     "type": "Expression"
                                                 },
-                                                "type": "Int32"
-                                            },
-                                            "IncrementalLoadFlag": {
-                                                "value": {
-                                                    "value": "@activity('LU-Metadata').output.firstRow.IncrementalLoadFlag",
-                                                    "type": "Expression"
-                                                },
-                                                "type": "Boolean"
-                                            },
-                                            "Message": {
-                                                "value": {
-                                                    "value": "@activity('LU-Metadata').output.firstRow.SourceObject",
-                                                    "type": "Expression"
-                                                },
-                                                "type": "String"
+                                                "type": "Guid"
                                             }
                                         }
                                     },
@@ -1589,7 +1550,7 @@
                         "type": "String",
                         "defaultValue": "Sales"
                     },
-                    "SourceObject": {
+                    "SourceTable": {
                         "type": "String",
                         "defaultValue": "Invoices"
                     }
@@ -1664,7 +1625,7 @@
                                 },
                                 "Message": {
                                     "value": {
-                                        "value": "@{pipeline().parameters.SourceObject}",
+                                        "value": "@concat(pipeline().parameters.SourceSchema, '.', pipeline().parameters.SourceTable)",
                                         "type": "Expression"
                                     },
                                     "type": "String"
@@ -1699,7 +1660,7 @@
                             "source": {
                                 "type": "SqlSource",
                                 "sqlReaderQuery": {
-                                    "value": "SELECT * FROM UTIL.vDataLoadMetadata WHERE SourceType = 'TABLE' AND TargetType = 'TABLE' AND SourceSystem = '@{pipeline().parameters.SourceSystem}' AND SourceSchema = '@{pipeline().parameters.SourceSchema}' AND SourceObject = '@{pipeline().parameters.SourceObject}'",
+                                    "value": "SELECT * FROM UTIL.[vDataLoadMetaData_FromTable_ToTable] WHERE SourceSystem = '@{pipeline().parameters.SourceSystem}' AND SourceSchema = '@{pipeline().parameters.SourceSchema}' AND SourceTable = '@{pipeline().parameters.SourceTable}'",
                                     "type": "Expression"
                                 }
                             },
@@ -1788,7 +1749,7 @@
                                             "type": "SqlSink",
                                             "writeBatchSize": 10000,
                                             "preCopyScript": {
-                                                "value": "TRUNCATE TABLE @{activity('LU-Metadata').output.firstRow.TargetTable}",
+                                                "value": "TRUNCATE TABLE @{activity('LU-Metadata').output.firstRow.TargetObject}",
                                                 "type": "Expression"
                                             }
                                         },
@@ -1813,7 +1774,7 @@
                                             "type": "DatasetReference",
                                             "parameters": {
                                                 "SinkTableName": {
-                                                    "value": "@{activity('LU-Metadata').output.firstRow.TargetTable}",
+                                                    "value": "@{activity('LU-Metadata').output.firstRow.TargetObject}",
                                                     "type": "Expression"
                                                 }
                                             }
@@ -1882,7 +1843,7 @@
                         "userProperties": [],
                         "typeProperties": {
                             "expression": {
-                                "value": "@{activity('LU-Metadata').output.firstRow.ExtractionFlag}",
+                                "value": "@{and(activity('LU-Metadata').output.firstRow.IncrementalLoadFlag, activity('LU-Metadata').output.firstRow.ExtractionFlag)}",
                                 "type": "Expression"
                             },
                             "ifTrueActivities": [
@@ -1900,13 +1861,6 @@
                                     "typeProperties": {
                                         "storedProcedureName": "[concat('[', 'UTIL].[spUpdateLastExtraction]')]",
                                         "storedProcedureParameters": {
-                                            "ExecutionTime": {
-                                                "value": {
-                                                    "value": "@pipeline().TriggerTime",
-                                                    "type": "Expression"
-                                                },
-                                                "type": "DateTime"
-                                            },
                                             "LastExtractionCounter": {
                                                 "value": {
                                                     "value": "@variables('LastExtractionCounter')",
@@ -1926,21 +1880,7 @@
                                                     "value": "@{activity('LU-Metadata').output.firstRow.RecordID}",
                                                     "type": "Expression"
                                                 },
-                                                "type": "Int32"
-                                            },
-                                            "IncrementalLoadFlag": {
-                                                "value": {
-                                                    "value": "@activity('LU-Metadata').output.firstRow.IncrementalLoadFlag",
-                                                    "type": "Expression"
-                                                },
-                                                "type": "Boolean"
-                                            },
-                                            "Message": {
-                                                "value": {
-                                                    "value": "@activity('LU-Metadata').output.firstRow.SourceObject",
-                                                    "type": "Expression"
-                                                },
-                                                "type": "String"
+                                                "type": "Guid"
                                             }
                                         }
                                     },
@@ -2146,13 +2086,13 @@
                 "parameters": {
                     "SourceSystem": {
                         "type": "String",
-                        "defaultValue": "WideWorldImporters-Standard"
+                        "defaultValue": "Src-Azure"
                     },
                     "SourceSchema": {
                         "type": "String",
                         "defaultValue": "Application"
                     },
-                    "SourceObject": {
+                    "SourceTable": {
                         "type": "String",
                         "defaultValue": "Cities"
                     }
@@ -2227,7 +2167,7 @@
                                 },
                                 "Message": {
                                     "value": {
-                                        "value": "@{pipeline().parameters.SourceObject}",
+                                        "value": "@concat(pipeline().parameters.SourceSchema, '.', pipeline().parameters.SourceTable)",
                                         "type": "Expression"
                                     },
                                     "type": "String"
@@ -2262,7 +2202,7 @@
                             "source": {
                                 "type": "SqlSource",
                                 "sqlReaderQuery": {
-                                    "value": "SELECT * FROM UTIL.vDataLoadMetadata WHERE SourceType = 'TABLE' AND TargetType = 'TABLE' AND SourceSystem = '@{pipeline().parameters.SourceSystem}' AND SourceSchema = '@{pipeline().parameters.SourceSchema}' AND SourceObject = '@{pipeline().parameters.SourceObject}'",
+                                    "value": "SELECT * FROM UTIL.[vDataLoadMetaData_FromTable_ToTable] WHERE SourceSystem = '@{pipeline().parameters.SourceSystem}' AND SourceSchema = '@{pipeline().parameters.SourceSchema}' AND SourceTable = '@{pipeline().parameters.SourceTable}'",
                                     "type": "Expression"
                                 }
                             },
@@ -2351,7 +2291,7 @@
                                             "type": "SqlSink",
                                             "writeBatchSize": 10000,
                                             "preCopyScript": {
-                                                "value": "TRUNCATE TABLE @{activity('LU-Metadata').output.firstRow.TargetTable}",
+                                                "value": "TRUNCATE TABLE @{activity('LU-Metadata').output.firstRow.TargetObject}",
                                                 "type": "Expression"
                                             }
                                         },
@@ -2383,7 +2323,7 @@
                                             "type": "DatasetReference",
                                             "parameters": {
                                                 "SinkTableName": {
-                                                    "value": "@{activity('LU-Metadata').output.firstRow.TargetTable}",
+                                                    "value": "@{activity('LU-Metadata').output.firstRow.TargetObject}",
                                                     "type": "Expression"
                                                 }
                                             }
@@ -2470,13 +2410,6 @@
                                     "typeProperties": {
                                         "storedProcedureName": "[concat('[', 'UTIL].[spUpdateLastExtraction]')]",
                                         "storedProcedureParameters": {
-                                            "ExecutionTime": {
-                                                "value": {
-                                                    "value": "@pipeline().TriggerTime",
-                                                    "type": "Expression"
-                                                },
-                                                "type": "DateTime"
-                                            },
                                             "LastExtractionCounter": {
                                                 "value": {
                                                     "value": "@variables('LastExtractionCounter')",
@@ -2496,21 +2429,7 @@
                                                     "value": "@{activity('LU-Metadata').output.firstRow.RecordID}",
                                                     "type": "Expression"
                                                 },
-                                                "type": "Int32"
-                                            },
-                                            "IncrementalLoadFlag": {
-                                                "value": {
-                                                    "value": "@activity('LU-Metadata').output.firstRow.IncrementalLoadFlag",
-                                                    "type": "Expression"
-                                                },
-                                                "type": "Boolean"
-                                            },
-                                            "Message": {
-                                                "value": {
-                                                    "value": "@activity('LU-Metadata').output.firstRow.SourceObject",
-                                                    "type": "Expression"
-                                                },
-                                                "type": "String"
+                                                "type": "Guid"
                                             }
                                         }
                                     },
@@ -2716,15 +2635,15 @@
                 "parameters": {
                     "SourceSystem": {
                         "type": "String",
-                        "defaultValue": "PRG_DEV"
+                        "defaultValue": "Src-OnPrem"
                     },
                     "SourceSchema": {
                         "type": "String",
-                        "defaultValue": "dbo"
+                        "defaultValue": "HumanResources"
                     },
-                    "SourceObject": {
+                    "SourceTable": {
                         "type": "String",
-                        "defaultValue": "[concat('[', 'IWF$Customer]')]"
+                        "defaultValue": "Department"
                     }
                 },
                 "variables": {
@@ -2800,8 +2719,8 @@
                                                 "value": "@item().SourceSchema",
                                                 "type": "Expression"
                                             },
-                                            "SourceObject": {
-                                                "value": "@item().SourceObject",
+                                            "SourceTable": {
+                                                "value": "@item().SourceTable",
                                                 "type": "Expression"
                                             }
                                         }
@@ -2827,7 +2746,7 @@
                             "source": {
                                 "type": "SqlSource",
                                 "sqlReaderQuery": {
-                                    "value": "SELECT * FROM UTIL.vDataLoadMetaData WHERE SourceType = 'TABLE' AND TargetType = 'DATALAKE' AND SourceSystem = '@{pipeline().parameters.SourceSystem}'\n",
+                                    "value": "SELECT * FROM UTIL.vDataLoadMetaData_FromTable_ToFile WHERE SourceSystem = '@{pipeline().parameters.SourceSystem}' AND TargetSystem = 'ADLS'",
                                     "type": "Expression"
                                 }
                             },
@@ -2898,12 +2817,8 @@
                                                 "value": "@item().SourceSystem",
                                                 "type": "Expression"
                                             },
-                                            "SourceSchema": {
-                                                "value": "@item().SourceSchema",
-                                                "type": "Expression"
-                                            },
-                                            "SourceObject": {
-                                                "value": "@item().SourceObject",
+                                            "SourceFile": {
+                                                "value": "@item().SourceFile",
                                                 "type": "Expression"
                                             }
                                         }
@@ -2929,7 +2844,7 @@
                             "source": {
                                 "type": "SqlSource",
                                 "sqlReaderQuery": {
-                                    "value": "SELECT * FROM UTIL.vDataLoadMetaData WHERE SourceType = 'DATALAKE' AND TargetType = 'TABLE' AND SourceSystem = '@{pipeline().parameters.SourceSystem}'\n",
+                                    "value": "SELECT * FROM UTIL.[vDataLoadMetaData_FromFile_ToTable] WHERE SourceSystem = '@{pipeline().parameters.SourceSystem}'\n",
                                     "type": "Expression"
                                 }
                             },
@@ -2945,7 +2860,7 @@
                 "parameters": {
                     "SourceSystem": {
                         "type": "String",
-                        "defaultValue": "ADLSG2"
+                        "defaultValue": "ADLS"
                     }
                 },
                 "folder": {
@@ -3000,12 +2915,8 @@
                                                 "value": "@item().SourceSystem",
                                                 "type": "Expression"
                                             },
-                                            "SourceSchema": {
-                                                "value": "@item().SourceSchema",
-                                                "type": "Expression"
-                                            },
-                                            "SourceObject": {
-                                                "value": "@item().SourceObject",
+                                            "SourceFile": {
+                                                "value": "@item().SourceFile",
                                                 "type": "Expression"
                                             }
                                         }
@@ -3031,7 +2942,7 @@
                             "source": {
                                 "type": "SqlSource",
                                 "sqlReaderQuery": {
-                                    "value": "SELECT * FROM UTIL.vDataLoadMetaData WHERE SourceType = 'FILE' AND TargetType = 'TABLE' AND SourceSystem = '@{pipeline().parameters.SourceSystem}'\n",
+                                    "value": "SELECT * FROM [UTIL].[vDataLoadMetaData_FromFile_ToTable] WHERE SourceSystem = '@{pipeline().parameters.SourceSystem}'\n",
                                     "type": "Expression"
                                 }
                             },
@@ -3047,7 +2958,7 @@
                 "parameters": {
                     "SourceSystem": {
                         "type": "String",
-                        "defaultValue": "Local"
+                        "defaultValue": "Az-FileStorage"
                     }
                 },
                 "folder": {
@@ -3106,8 +3017,8 @@
                                                 "value": "@item().SourceSchema",
                                                 "type": "Expression"
                                             },
-                                            "SourceObject": {
-                                                "value": "@item().SourceObject",
+                                            "SourceTable": {
+                                                "value": "@item().SourceTable",
                                                 "type": "Expression"
                                             }
                                         }
@@ -3133,7 +3044,7 @@
                             "source": {
                                 "type": "SqlSource",
                                 "sqlReaderQuery": {
-                                    "value": "SELECT * FROM UTIL.vDataLoadMetaData WHERE SourceType = 'TABLE' AND TargetType = 'DATALAKE' AND SourceSystem = '@{pipeline().parameters.SourceSystem}'\n",
+                                    "value": "SELECT * FROM UTIL.vDataLoadMetaData_FromTable_ToFile WHERE SourceSystem = '@{pipeline().parameters.SourceSystem}' AND TargetSystem = 'ADLS'\n",
                                     "type": "Expression"
                                 }
                             },
@@ -3169,11 +3080,11 @@
             "properties": {
                 "activities": [
                     {
-                        "name": "Loop-Tables",
+                        "name": "Loop-Tables-Seq",
                         "type": "ForEach",
                         "dependsOn": [
                             {
-                                "activity": "LU-GetTableList",
+                                "activity": "LU-GetTableList-Seq",
                                 "dependencyConditions": [
                                     "Succeeded"
                                 ]
@@ -3182,14 +3093,13 @@
                         "userProperties": [],
                         "typeProperties": {
                             "items": {
-                                "value": "@activity('LU-GetTableList').output.value",
+                                "value": "@activity('LU-GetTableList-Seq').output.value",
                                 "type": "Expression"
                             },
-                            "isSequential": false,
-                            "batchCount": 4,
+                            "isSequential": true,
                             "activities": [
                                 {
-                                    "name": "EP-Framework",
+                                    "name": "EP-Framework-Seq",
                                     "type": "ExecutePipeline",
                                     "dependsOn": [],
                                     "userProperties": [],
@@ -3198,7 +3108,7 @@
                                             "referenceName": "PL-Framework-FromAzure-ToAzure",
                                             "type": "PipelineReference"
                                         },
-                                        "waitOnCompletion": false,
+                                        "waitOnCompletion": true,
                                         "parameters": {
                                             "SourceSystem": {
                                                 "value": "@item().SourceSystem",
@@ -3208,8 +3118,8 @@
                                                 "value": "@item().SourceSchema",
                                                 "type": "Expression"
                                             },
-                                            "SourceObject": {
-                                                "value": "@item().SourceObject",
+                                            "SourceTable": {
+                                                "value": "@item().SourceTable",
                                                 "type": "Expression"
                                             }
                                         }
@@ -3219,7 +3129,7 @@
                         }
                     },
                     {
-                        "name": "LU-GetTableList",
+                        "name": "LU-GetTableList-Seq",
                         "description": "Get the list of tables to load from the Metadata table",
                         "type": "Lookup",
                         "dependsOn": [],
@@ -3235,7 +3145,7 @@
                             "source": {
                                 "type": "SqlSource",
                                 "sqlReaderQuery": {
-                                    "value": "SELECT * FROM UTIL.vDataLoadMetaData WHERE SourceType = 'TABLE' AND TargetType = 'TABLE' AND SourceSystem = '@{pipeline().parameters.SourceSystem}'\n",
+                                    "value": "SELECT * FROM UTIL.[vDataLoadMetaData_FromTable_ToTable] WHERE SourceSystem = '@{pipeline().parameters.SourceSystem}' AND RunParallel = 0 ORDER BY RunSequence\n",
                                     "type": "Expression"
                                 }
                             },
@@ -3245,6 +3155,176 @@
                                 "parameters": {}
                             },
                             "firstRowOnly": false
+                        }
+                    },
+                    {
+                        "name": "LU-GetTableList-Pll-B1",
+                        "description": "Get the list of tables to load from the Metadata table",
+                        "type": "Lookup",
+                        "dependsOn": [
+                            {
+                                "activity": "Loop-Tables-Seq",
+                                "dependencyConditions": [
+                                    "Succeeded"
+                                ]
+                            }
+                        ],
+                        "policy": {
+                            "timeout": "7.00:00:00",
+                            "retry": 0,
+                            "retryIntervalInSeconds": 30,
+                            "secureOutput": false,
+                            "secureInput": false
+                        },
+                        "userProperties": [],
+                        "typeProperties": {
+                            "source": {
+                                "type": "SqlSource",
+                                "sqlReaderQuery": {
+                                    "value": "SELECT * FROM UTIL.[vDataLoadMetaData_FromTable_ToTable] WHERE SourceSystem = '@{pipeline().parameters.SourceSystem}' AND RunParallel = 1 AND BatchSequence = 1",
+                                    "type": "Expression"
+                                }
+                            },
+                            "dataset": {
+                                "referenceName": "DSDataLoadMetadata",
+                                "type": "DatasetReference",
+                                "parameters": {}
+                            },
+                            "firstRowOnly": false
+                        }
+                    },
+                    {
+                        "name": "Loop-Tables-Seq-Pll-B1",
+                        "type": "ForEach",
+                        "dependsOn": [
+                            {
+                                "activity": "LU-GetTableList-Pll-B1",
+                                "dependencyConditions": [
+                                    "Succeeded"
+                                ]
+                            }
+                        ],
+                        "userProperties": [],
+                        "typeProperties": {
+                            "items": {
+                                "value": "@activity('LU-GetTableList-Pll-B1').output.value",
+                                "type": "Expression"
+                            },
+                            "isSequential": false,
+                            "activities": [
+                                {
+                                    "name": "EP-Framework-Pll-B1",
+                                    "type": "ExecutePipeline",
+                                    "dependsOn": [],
+                                    "userProperties": [],
+                                    "typeProperties": {
+                                        "pipeline": {
+                                            "referenceName": "PL-Framework-FromAzure-ToAzure",
+                                            "type": "PipelineReference"
+                                        },
+                                        "waitOnCompletion": true,
+                                        "parameters": {
+                                            "SourceSystem": {
+                                                "value": "@item().SourceSystem",
+                                                "type": "Expression"
+                                            },
+                                            "SourceSchema": {
+                                                "value": "@item().SourceSchema",
+                                                "type": "Expression"
+                                            },
+                                            "SourceTable": {
+                                                "value": "@item().SourceTable",
+                                                "type": "Expression"
+                                            }
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    {
+                        "name": "LU-GetTableList-Pll-B2",
+                        "description": "Get the list of tables to load from the Metadata table",
+                        "type": "Lookup",
+                        "dependsOn": [
+                            {
+                                "activity": "Loop-Tables-Seq-Pll-B1",
+                                "dependencyConditions": [
+                                    "Succeeded"
+                                ]
+                            }
+                        ],
+                        "policy": {
+                            "timeout": "7.00:00:00",
+                            "retry": 0,
+                            "retryIntervalInSeconds": 30,
+                            "secureOutput": false,
+                            "secureInput": false
+                        },
+                        "userProperties": [],
+                        "typeProperties": {
+                            "source": {
+                                "type": "SqlSource",
+                                "sqlReaderQuery": {
+                                    "value": "SELECT * FROM UTIL.[vDataLoadMetaData_FromTable_ToTable] WHERE SourceSystem = '@{pipeline().parameters.SourceSystem}' AND RunParallel = 1 AND BatchSequence > 1",
+                                    "type": "Expression"
+                                }
+                            },
+                            "dataset": {
+                                "referenceName": "DSDataLoadMetadata",
+                                "type": "DatasetReference",
+                                "parameters": {}
+                            },
+                            "firstRowOnly": false
+                        }
+                    },
+                    {
+                        "name": "Loop-Tables-Seq-Pll-B2",
+                        "type": "ForEach",
+                        "dependsOn": [
+                            {
+                                "activity": "LU-GetTableList-Pll-B2",
+                                "dependencyConditions": [
+                                    "Succeeded"
+                                ]
+                            }
+                        ],
+                        "userProperties": [],
+                        "typeProperties": {
+                            "items": {
+                                "value": "@activity('LU-GetTableList-Pll-B2').output.value",
+                                "type": "Expression"
+                            },
+                            "isSequential": false,
+                            "activities": [
+                                {
+                                    "name": "EP-Framework-Pll-B2",
+                                    "type": "ExecutePipeline",
+                                    "dependsOn": [],
+                                    "userProperties": [],
+                                    "typeProperties": {
+                                        "pipeline": {
+                                            "referenceName": "PL-Framework-FromAzure-ToAzure",
+                                            "type": "PipelineReference"
+                                        },
+                                        "waitOnCompletion": true,
+                                        "parameters": {
+                                            "SourceSystem": {
+                                                "value": "@item().SourceSystem",
+                                                "type": "Expression"
+                                            },
+                                            "SourceSchema": {
+                                                "value": "@item().SourceSchema",
+                                                "type": "Expression"
+                                            },
+                                            "SourceTable": {
+                                                "value": "@item().SourceTable",
+                                                "type": "Expression"
+                                            }
+                                        }
+                                    }
+                                }
+                            ]
                         }
                     }
                 ],
@@ -3309,8 +3389,8 @@
                                                 "value": "@item().SourceSchema",
                                                 "type": "Expression"
                                             },
-                                            "SourceObject": {
-                                                "value": "@item().SourceObject",
+                                            "SourceTable": {
+                                                "value": "@item().SourceTable",
                                                 "type": "Expression"
                                             }
                                         }
@@ -3336,7 +3416,7 @@
                             "source": {
                                 "type": "SqlSource",
                                 "sqlReaderQuery": {
-                                    "value": "SELECT * FROM UTIL.vDataLoadMetaData WHERE SourceType = 'TABLE' AND TargetType = 'TABLE' AND SourceSystem = '@{pipeline().parameters.SourceSystem}'\n",
+                                    "value": "SELECT * FROM UTIL.[vDataLoadMetaData_FromTable_ToTable] WHERE SourceSystem = '@{pipeline().parameters.SourceSystem}'\n",
                                     "type": "Expression"
                                 }
                             },

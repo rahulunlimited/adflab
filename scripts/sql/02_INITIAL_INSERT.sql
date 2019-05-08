@@ -1,45 +1,14 @@
-DELETE FROM UTIL.DataLoadMetadata
-GO
+DELETE FROM [UTIL].[DataLoadMetadata_FromTable_ToTable]
+WHERE SourceSystem = 'Src-OnPrem'
 
-DECLARE @CTR INT;
-SELECT @CTR = ISNULL(MAX(RecordID),0) FROM UTIL.DataLoadMetadata
-
-INSERT INTO [UTIL].[DataLoadMetadata] (
-	[RecordID]
-	,[SourceType]
-	,[SourceSystem]
+INSERT INTO [UTIL].[DataLoadMetadata_FromTable_ToTable] (
+	[SourceSystem]
 	,[SourceDatabase]
 	,[SourceSchema]
-	,[SourceObject]
+	,[SourceTable]
 	,[SourceSQL]
-	,[TargetType]
 	,[TargetSchema]
-	,[TargetObject]
-	,[TransformationSP]
-	,[IncrementalLoadFlag]
-	,[IncrementalLoadColumn]
-	,[IncrementalLoadColumnType])
-VALUES 
-(@CTR + 1, 'Table', 'Src-OnPrem', 'AdventureWorks2014', 'HumanResources', 'Department', NULL, 'Table',  'STG', 'HumanResources_Department', NULL, 0, NULL, NULL), 
-(@CTR + 2, 'Table', 'Src-OnPrem', 'AdventureWorks2014', 'Production', 'WorkOrder', NULL, 'Table',  'STG', 'Production_WorkOrder', NULL, 1, 'ModifiedDate', 'DATE') 
-
-GO
-
-DECLARE @CTR INT;
-SELECT @CTR = ISNULL(MAX(RecordID),0) FROM UTIL.DataLoadMetadata
-
-
-INSERT INTO [UTIL].[DataLoadMetadata] (
-	[RecordID]
-	,[SourceType]
-	,[SourceSystem]
-	,[SourceDatabase]
-	,[SourceSchema]
-	,[SourceObject]
-	,[SourceSQL]
-	,[TargetType]
-	,[TargetSchema]
-	,[TargetObject]
+	,[TargetTable]
 	,[TransformationSP]
 	,[IncrementalLoadFlag]
 	,[IncrementalLoadColumn]
@@ -48,98 +17,109 @@ INSERT INTO [UTIL].[DataLoadMetadata] (
 	,[BatchSequence]
 	,[RunSequence])
 VALUES 
-(@CTR + 1, 'Table', 'Src-Azure', 'WideWorldImporters', 'Application', 'Countries', NULL, 'Table',  'STG', 'Application_Countries', 'dbo.spLoad_Country', 0, NULL, NULL, 0, 1, 1), 
-(@CTR + 2, 'Table', 'Src-Azure', 'WideWorldImporters', 'Application', 'StateProvinces', NULL, 'Table',  'STG', 'Application_StateProvinces', 'dbo.spLoad_StateProvince', 0, NULL, NULL, 0, 1, 2), 
-(@CTR + 3, 'Table', 'Src-Azure', 'WideWorldImporters', 'Application', 'Cities', 'SELECT [CityID] ,[CityName] ,[StateProvinceID] ,CONVERT(varbinary(4000), [Location]) [Location] ,LatestRecordedPopulation ,[LastEditedBy] ,[ValidFrom] ,[ValidTo] FROM [Application].[Cities]', 'Table',  'STG', 'Application_Cities', NULL, 0, NULL, NULL, 0, 1, 3),
-(@CTR + 4, 'Table', 'Src-Azure', 'WideWorldImporters', 'Application', 'CitiesNY', 'SELECT  C.*
-FROM [Application].Cities C
-INNER JOIN [Application].StateProvinces S ON S.StateProvinceID = C.StateProvinceID
-WHERE StateProvinceName = ''New York''', 'Table',  'STG', 'Application_Cities_NY', NULL, 0, NULL, NULL, 0, 1, 4),
-(@CTR + 5, 'Table', 'Src-Azure', 'WideWorldImporters', 'Application', 'DeliveryMethods', NULL, 'Table',  'STG', 'Application_DeliveryMethods', NULL, 0, NULL, NULL, 1, 1, 1),
-(@CTR + 6, 'Table', 'Src-Azure', 'WideWorldImporters', 'Application', 'PaymentMethods', NULL, 'Table',  'STG', 'Application_PaymentMethods', NULL, 0, NULL, NULL, 1, 1, 1)
+('Src-OnPrem', 'AdventureWorks2014', 'HumanResources', 'Department', NULL, 'STG', 'HumanResources_Department', NULL, 0, NULL, NULL, 1, 1, 1), 
+('Src-OnPrem', 'AdventureWorks2014', 'Production', 'WorkOrder', NULL, 'STG', 'Production_WorkOrder', NULL, 1, 'ModifiedDate', 'DATE', 1, 1, 1) 
 
-GO
+DELETE FROM [UTIL].[DataLoadMetadata_FromTable_ToTable]
+WHERE SourceSystem = 'Src-Azure'
 
-DECLARE @CTR INT;
-SELECT @CTR = ISNULL(MAX(RecordID),0) FROM UTIL.DataLoadMetadata
-
-
-INSERT INTO [UTIL].[DataLoadMetadata] (
-	[RecordID]
-	,[SourceType]
-	,[SourceSystem]
+INSERT INTO [UTIL].[DataLoadMetadata_FromTable_ToTable] (
+	[SourceSystem]
 	,[SourceDatabase]
 	,[SourceSchema]
-	,[SourceObject]
+	,[SourceTable]
 	,[SourceSQL]
-	,[TargetType]
-	,[TargetObject]
-	,[TargetFolder]
-	,[PrefixDateTime]
+	,[TargetSchema]
+	,[TargetTable]
+	,[TransformationSP]
 	,[IncrementalLoadFlag]
-	,[ColumnDelimiter]
-	,[RowDelimiter]
 	,[IncrementalLoadColumn]
-	,[IncrementalLoadColumnType])
+	,[IncrementalLoadColumnType]
+	,[RunParallel]
+	,[BatchSequence]
+	,[RunSequence])
+VALUES
+('Src-Azure', 'WideWorldImporters', 'Application', 'Countries', NULL, 'STG', 'Application_Countries', 'dbo.spLoad_Country', 0, NULL, NULL, 0, 1, 1), 
+('Src-Azure', 'WideWorldImporters', 'Application', 'StateProvinces', NULL, 'STG', 'Application_StateProvinces', 'dbo.spLoad_StateProvince', 0, NULL, NULL, 0, 1, 2), 
+('Src-Azure', 'WideWorldImporters', 'Application', 'Cities', 'SELECT [CityID] ,[CityName] ,[StateProvinceID] ,CONVERT(varbinary(4000), [Location]) [Location] ,LatestRecordedPopulation ,[LastEditedBy] ,[ValidFrom] ,[ValidTo] FROM [Application].[Cities]', 'STG', 'Application_Cities', NULL, 0, NULL, NULL, 1, 1, 1),
+('Src-Azure', 'WideWorldImporters', 'Application', 'CitiesNY', 'SELECT  C.*
+FROM [Application].Cities C
+INNER JOIN [Application].StateProvinces S ON S.StateProvinceID = C.StateProvinceID
+WHERE StateProvinceName = ''New York''', 'STG', 'Application_Cities_NY', NULL, 0, NULL, NULL, 1, 1, 1),
+('Src-Azure', 'WideWorldImporters', 'Application', 'DeliveryMethods', NULL, 'STG', 'Application_DeliveryMethods', NULL, 0, NULL, NULL, 1, 1, 1),
+('Src-Azure', 'WideWorldImporters', 'Application', 'PaymentMethods', NULL, 'STG', 'Application_PaymentMethods', NULL, 0, NULL, NULL, 1, 1, 1),
+('Src-Azure', 'WideWorldImporters', 'Sales', 'Invoices', NULL, 'STG', 'Sales_Invoices', NULL, 1, 'LastEditedWhen', 'DATE', 1, 2, 1)
+
+SELECT * FROM [UTIL].[DataLoadMetadata_FromTable_ToTable]
+
+
+DELETE FROM [UTIL].DataLoadMetadata_FromTable_ToFile
+WHERE TargetSystem = 'ADLS'
+
+INSERT INTO [UTIL].DataLoadMetadata_FromTable_ToFile (
+	[SourceSystem]
+	,[SourceDatabase]
+	,[SourceSchema]
+	,[SourceTable]
+	,[SourceSQL]
+	,[TargetSystem]
+	,[TargetFolder]
+	,[TargetFilePrefix]
+	,[IncrementalLoadFlag]
+	,[IncrementalLoadColumn]
+	,[IncrementalLoadColumnType]
+	,[ColumnDelimiter]
+	,[RowDelimiter])
 VALUES 
-(@CTR + 1, 'Table', 'Src-OnPrem', 'AdventureWorks2014', 'HumanResources', 'Department', NULL, 'Datalake',  'HumanResources_Department', 'HRDepartment', 1, 0, ',', '\r\n', NULL, NULL), 
-(@CTR + 2, 'Table', 'Src-OnPrem', 'AdventureWorks2014', 'Production', 'WorkOrder', NULL, 'Datalake',  'WorkOrder', 'WorkOrder', 1, 1, ',', '\r\n',  'ModifiedDate', 'DATE'),
-(@CTR + 3, 'Table', 'Src-Azure', 'WideWorldImporters', 'Sales', 'Invoices', NULL, 'Datalake',  'Invoices', 'Sales', 1, 1, '|', '\r\n',  'LastEditedWhen', 'DATE')
+('Src-OnPrem', 'AdventureWorks2014', 'HumanResources', 'Department', NULL, 'ADLS',  'HRDepartment', 'HumanResources_Department', 0, NULL, NULL, ',', '\r\n'), 
+('Src-OnPrem', 'AdventureWorks2014', 'Production', 'WorkOrder', NULL, 'ADLS',  'WorkOrder', 'WorkOrder', 1, 'ModifiedDate', 'DATE', ',', '\r\n'),
+('Src-Azure', 'WideWorldImporters', 'Sales', 'Invoices', NULL, 'ADLS',  'Sales', 'Invoices', 1, 'LastEditedWhen', 'DATE', '|', '\r\n')
+
+SELECT * FROM [UTIL].DataLoadMetadata_FromTable_ToFile
 
 GO
 
 
+DELETE FROM [UTIL].[DataLoadMetadata_FromFile_ToTable]
+WHERE SourceSystem = 'Az-FileStorage'
 
-DECLARE @CTR INT;
-SELECT @CTR = ISNULL(MAX(RecordID),0) FROM UTIL.DataLoadMetadata
-
-
-INSERT INTO [UTIL].[DataLoadMetadata] (
-	[RecordID]
-	,[SourceType]
-	,[SourceSystem]
-	,[SourceObject]
-	,[TargetType]
+INSERT INTO [UTIL].[DataLoadMetadata_FromFile_ToTable] (
+	[SourceSystem]
+	,[SourceFile]
 	,[TargetSchema]
-	,[TargetObject]
+	,[TargetTable]
 	,[TransformationSP]
 	,[ColumnDelimiter]
 	,[RowDelimiter]
 	,[FirstRowHeader]
 	,[PrefixDateTime]
 	,[SourceFolder]
-	,[TargetFolder]
+	,[ArchiveFolder]
 )
 
 VALUES 
-(@CTR + 1, 'File', 'Local', 'AUS-State.csv', 'Table', 'STG', 'CSV_AusState', 'dbo.spLoad_StateProvince_Ext', ',', '\r\n', 1, 1, 'src', 'dest')
+('Az-FileStorage', 'AUS-State.csv', 'STG', 'CSV_AusState', 'dbo.spLoad_StateProvince_Ext', ',', '\r\n', 1, 1, 'src', 'dest')
 
+DELETE FROM [UTIL].[DataLoadMetadata_FromFile_ToTable]
+WHERE SourceSystem = 'ADLS'
 
-
-GO
-
-
-
-DECLARE @CTR INT;
-SELECT @CTR = ISNULL(MAX(RecordID),0) FROM UTIL.DataLoadMetadata
-
-
-INSERT INTO [UTIL].[DataLoadMetadata] (
-	[RecordID]
-	,[SourceType]
-	,[SourceSystem]
-	,[SourceObject]
-	,[TargetType]
+INSERT INTO [UTIL].[DataLoadMetadata_FromFile_ToTable] (
+	[SourceSystem]
+	,[SourceFile]
 	,[TargetSchema]
-	,[TargetObject]
+	,[TargetTable]
 	,[TransformationSP]
-	,[IncrementalLoadFlag]
-	,[SourceFolder]
 	,[ColumnDelimiter]
+	,[RowDelimiter]
+	,[FirstRowHeader]
+	,[PrefixDateTime]
+	,[SourceFolder]
+	,[ArchiveFolder]
 )
 
 VALUES 
-(@CTR + 1, 'Datalake', 'ADLSG2', 'WorkOrder', 'Table', 'STG', 'EXT_WorkOrder', NULL, 1, 'WorkOrder', ','),
-(@CTR + 2, 'Datalake', 'ADLSG2', 'Invoices', 'Table', 'STG', 'EXT_Invoices', NULL, 1, 'Sales', '|')
+('ADLS', 'WorkOrder', 'STG', 'EXT_WorkOrder', NULL, ',', NULL, NULL, NULL, 'WorkOrder', NULL),
+('ADLS', 'Invoices', 'STG', 'EXT_Invoices', NULL, '|', NULL, NULL, NULL, 'Sales', NULL)
 
-SELECT * FROM UTIL.vDataLoadMetadata
+SELECT * FROM [UTIL].[DataLoadMetadata_FromFile_ToTable]
+
