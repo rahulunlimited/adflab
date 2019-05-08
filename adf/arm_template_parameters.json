@@ -3,13 +3,10 @@
     "contentVersion": "1.0.0.0",
     "parameters": {
         "factoryName": {
-            "value": "vlrx1adf"
+            "value": "vlrex1adf"
         },
-        "DSTextFileGeneral_properties_typeProperties_fileName": {
-            "value": "@dataset().fileName"
-        },
-        "DSTextFileGeneral_properties_typeProperties_folderPath": {
-            "value": "@dataset().folderPath"
+        "LinkedServiceTargetDatabase_properties_typeProperties_connectionString_secretName": {
+            "value": "db-adflab-connstr"
         },
         "DSDataLakeGeneral_properties_typeProperties_fileName": {
             "value": "@dataset().filename"
@@ -17,26 +14,29 @@
         "DSDataLakeGeneral_properties_typeProperties_folderPath": {
             "value": "@{concat(dataset().container, '/', dataset().folder)}"
         },
+        "DSTextFileGeneral_properties_typeProperties_fileName": {
+            "value": "@dataset().fileName"
+        },
+        "DSTextFileGeneral_properties_typeProperties_folderPath": {
+            "value": "@dataset().folderPath"
+        },
         "LinkedServiceAzureKeyVault_properties_typeProperties_baseUrl": {
-            "value": "https://vlrx1kv.vault.azure.net/"
+            "value": "https://vlrex1kv.vault.azure.net/"
         },
         "LinkedServiceAzureBlobStorage_properties_typeProperties_connectionString_secretName": {
             "value": "blob-connection-string"
         },
-        "LinkedServiceAzureFileStorage_properties_typeProperties_userId": {
-            "value": "AZURE\\vlrx1storage"
+        "LinkedServiceSourceAzureDatabase_properties_typeProperties_connectionString_secretName": {
+            "value": "db-source-azure-connstr"
+        },
+        "LinkedServiceAzureDLGen2Storage_properties_typeProperties_url": {
+            "value": "https://vlrex1datalake.dfs.core.windows.net"
         },
         "LinkedServiceSourceOnPremDatabase_properties_typeProperties_connectionString_secretName": {
             "value": "db-source-onprem-connstr"
         },
-        "LinkedServiceAzureDLGen2Storage_properties_typeProperties_url": {
-            "value": "https://vlrx1datalake.dfs.core.windows.net"
-        },
-        "LinkedServiceSourceAzureDatabase_properties_typeProperties_connectionString_secretName": {
-            "value": "db-source-azure-connstr"
-        },
-        "LinkedServiceTargetDatabase_properties_typeProperties_connectionString_secretName": {
-            "value": "db-adflab-connstr"
+        "LinkedServiceAzureFileStorage_properties_typeProperties_userId": {
+            "value": "AZURE\\vlrex1storage"
         }
     }
 }

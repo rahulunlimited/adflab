@@ -5,15 +5,11 @@
         "factoryName": {
             "type": "string",
             "metadata": "Data Factory Name",
-            "defaultValue": "vlrx1adf"
+            "defaultValue": "vlrex1adf"
         },
-        "DSTextFileGeneral_properties_typeProperties_fileName": {
+        "LinkedServiceTargetDatabase_properties_typeProperties_connectionString_secretName": {
             "type": "string",
-            "defaultValue": "@dataset().fileName"
-        },
-        "DSTextFileGeneral_properties_typeProperties_folderPath": {
-            "type": "string",
-            "defaultValue": "@dataset().folderPath"
+            "defaultValue": "db-adflab-connstr"
         },
         "DSDataLakeGeneral_properties_typeProperties_fileName": {
             "type": "string",
@@ -23,39 +19,390 @@
             "type": "string",
             "defaultValue": "@{concat(dataset().container, '/', dataset().folder)}"
         },
+        "DSTextFileGeneral_properties_typeProperties_fileName": {
+            "type": "string",
+            "defaultValue": "@dataset().fileName"
+        },
+        "DSTextFileGeneral_properties_typeProperties_folderPath": {
+            "type": "string",
+            "defaultValue": "@dataset().folderPath"
+        },
         "LinkedServiceAzureKeyVault_properties_typeProperties_baseUrl": {
             "type": "string",
-            "defaultValue": "https://vlrx1kv.vault.azure.net/"
+            "defaultValue": "https://vlrex1kv.vault.azure.net/"
         },
         "LinkedServiceAzureBlobStorage_properties_typeProperties_connectionString_secretName": {
             "type": "string",
             "defaultValue": "blob-connection-string"
         },
-        "LinkedServiceAzureFileStorage_properties_typeProperties_userId": {
+        "LinkedServiceSourceAzureDatabase_properties_typeProperties_connectionString_secretName": {
             "type": "string",
-            "defaultValue": "AZURE\\vlrx1storage"
+            "defaultValue": "db-source-azure-connstr"
+        },
+        "LinkedServiceAzureDLGen2Storage_properties_typeProperties_url": {
+            "type": "string",
+            "defaultValue": "https://vlrex1datalake.dfs.core.windows.net"
         },
         "LinkedServiceSourceOnPremDatabase_properties_typeProperties_connectionString_secretName": {
             "type": "string",
             "defaultValue": "db-source-onprem-connstr"
         },
-        "LinkedServiceAzureDLGen2Storage_properties_typeProperties_url": {
+        "LinkedServiceAzureFileStorage_properties_typeProperties_userId": {
             "type": "string",
-            "defaultValue": "https://vlrx1datalake.dfs.core.windows.net"
-        },
-        "LinkedServiceSourceAzureDatabase_properties_typeProperties_connectionString_secretName": {
-            "type": "string",
-            "defaultValue": "db-source-azure-connstr"
-        },
-        "LinkedServiceTargetDatabase_properties_typeProperties_connectionString_secretName": {
-            "type": "string",
-            "defaultValue": "db-adflab-connstr"
+            "defaultValue": "AZURE\\vlrex1storage"
         }
     },
     "variables": {
         "factoryId": "[concat('Microsoft.DataFactory/factories/', parameters('factoryName'))]"
     },
     "resources": [
+        {
+            "name": "[concat(parameters('factoryName'), '/PL-Framework-FromFile-ToAzure')]",
+            "type": "Microsoft.DataFactory/factories/pipelines",
+            "apiVersion": "2018-06-01",
+            "properties": {
+                "activities": [
+                    {
+                        "name": "SP-InitiateLog",
+                        "description": "Initiate the start of the Pipeline",
+                        "type": "SqlServerStoredProcedure",
+                        "dependsOn": [],
+                        "policy": {
+                            "timeout": "7.00:00:00",
+                            "retry": 0,
+                            "retryIntervalInSeconds": 30
+                        },
+                        "userProperties": [],
+                        "typeProperties": {
+                            "storedProcedureName": "UTIL.spPipelineExecutionInitiate",
+                            "storedProcedureParameters": {
+                                "DataFactoryName": {
+                                    "value": {
+                                        "value": "@pipeline().DataFactory",
+                                        "type": "Expression"
+                                    },
+                                    "type": "String"
+                                },
+                                "PipelineName": {
+                                    "value": {
+                                        "value": "@pipeline().Pipeline",
+                                        "type": "Expression"
+                                    },
+                                    "type": "String"
+                                },
+                                "RunID": {
+                                    "value": {
+                                        "value": "@pipeline().RunId",
+                                        "type": "Expression"
+                                    },
+                                    "type": "Guid"
+                                },
+                                "Message": {
+                                    "value": {
+                                        "value": "@{pipeline().parameters.SourceFile}",
+                                        "type": "Expression"
+                                    },
+                                    "type": "String"
+                                }
+                            }
+                        },
+                        "linkedServiceName": {
+                            "referenceName": "LinkedServiceTargetDatabase",
+                            "type": "LinkedServiceReference"
+                        }
+                    },
+                    {
+                        "name": "LU-Metadata",
+                        "type": "Lookup",
+                        "dependsOn": [
+                            {
+                                "activity": "SP-InitiateLog",
+                                "dependencyConditions": [
+                                    "Succeeded"
+                                ]
+                            }
+                        ],
+                        "policy": {
+                            "timeout": "7.00:00:00",
+                            "retry": 0,
+                            "retryIntervalInSeconds": 30
+                        },
+                        "userProperties": [],
+                        "typeProperties": {
+                            "source": {
+                                "type": "SqlSource",
+                                "sqlReaderQuery": {
+                                    "value": "SELECT * FROM UTIL.[vDataLoadMetaData_FromFile_ToTable] WHERE SourceSystem = '@{pipeline().parameters.SourceSystem}' AND SourceFile = '@{pipeline().parameters.SourceFile}'",
+                                    "type": "Expression"
+                                }
+                            },
+                            "dataset": {
+                                "referenceName": "DSDataLoadMetadata",
+                                "type": "DatasetReference",
+                                "parameters": {}
+                            }
+                        }
+                    },
+                    {
+                        "name": "IF-CopyData",
+                        "type": "IfCondition",
+                        "dependsOn": [
+                            {
+                                "activity": "AF-CheckFile",
+                                "dependencyConditions": [
+                                    "Succeeded"
+                                ]
+                            }
+                        ],
+                        "userProperties": [],
+                        "typeProperties": {
+                            "expression": {
+                                "value": "@activity('AF-CheckFile').output.Exists",
+                                "type": "Expression"
+                            },
+                            "ifTrueActivities": [
+                                {
+                                    "name": "COPY-FileToStage",
+                                    "type": "Copy",
+                                    "dependsOn": [],
+                                    "policy": {
+                                        "timeout": "7.00:00:00",
+                                        "retry": 0,
+                                        "retryIntervalInSeconds": 30
+                                    },
+                                    "userProperties": [],
+                                    "typeProperties": {
+                                        "source": {
+                                            "type": "FileSystemSource",
+                                            "recursive": true
+                                        },
+                                        "sink": {
+                                            "type": "SqlSink",
+                                            "writeBatchSize": 10000,
+                                            "preCopyScript": {
+                                                "value": "TRUNCATE TABLE @{activity('LU-Metadata').output.firstRow.TargetObject}",
+                                                "type": "Expression"
+                                            }
+                                        },
+                                        "enableStaging": false,
+                                        "dataIntegrationUnits": 0
+                                    },
+                                    "inputs": [
+                                        {
+                                            "referenceName": "DSTextFileGeneral",
+                                            "type": "DatasetReference",
+                                            "parameters": {
+                                                "columnDelimiter": {
+                                                    "value": "@{activity('LU-Metadata').output.firstRow.ColumnDelimiter}",
+                                                    "type": "Expression"
+                                                },
+                                                "rowDelimiter": {
+                                                    "value": "@{activity('LU-Metadata').output.firstRow.RowDelimiter}",
+                                                    "type": "Expression"
+                                                },
+                                                "firstRowAsHeader": {
+                                                    "value": "@{activity('LU-Metadata').output.firstRow.FirstRowHeader}",
+                                                    "type": "Expression"
+                                                },
+                                                "folderPath": {
+                                                    "value": "@{activity('LU-Metadata').output.firstRow.SourceFolder}",
+                                                    "type": "Expression"
+                                                },
+                                                "fileName": {
+                                                    "value": "@{activity('LU-Metadata').output.firstRow.SourceFile}",
+                                                    "type": "Expression"
+                                                }
+                                            }
+                                        }
+                                    ],
+                                    "outputs": [
+                                        {
+                                            "referenceName": "DSDBSinkGeneral",
+                                            "type": "DatasetReference",
+                                            "parameters": {
+                                                "SinkTableName": {
+                                                    "value": "@{activity('LU-Metadata').output.firstRow.TargetObject}",
+                                                    "type": "Expression"
+                                                }
+                                            }
+                                        }
+                                    ]
+                                },
+                                {
+                                    "name": "Az-MoveFile",
+                                    "type": "AzureFunctionActivity",
+                                    "dependsOn": [
+                                        {
+                                            "activity": "COPY-FileToStage",
+                                            "dependencyConditions": [
+                                                "Succeeded"
+                                            ]
+                                        }
+                                    ],
+                                    "policy": {
+                                        "timeout": "7.00:00:00",
+                                        "retry": 0,
+                                        "retryIntervalInSeconds": 30,
+                                        "secureOutput": false,
+                                        "secureInput": false
+                                    },
+                                    "userProperties": [],
+                                    "typeProperties": {
+                                        "functionName": {
+                                            "value": "@concat('AzFnFileService?op=move&inputfolder=', activity('LU-Metadata').output.firstRow.SourceFolder, '&file=', activity('LU-Metadata').output.firstRow.SourceFile, '&targetfolder=', activity('LU-Metadata').output.firstRow.ArchiveFolder, '&PrefixDateTime=Y')",
+                                            "type": "Expression"
+                                        },
+                                        "method": "GET",
+                                        "headers": {}
+                                    },
+                                    "linkedServiceName": {
+                                        "referenceName": "LinkedServiceAzureFunction",
+                                        "type": "LinkedServiceReference"
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    {
+                        "name": "IF-SPTransformData",
+                        "type": "IfCondition",
+                        "dependsOn": [
+                            {
+                                "activity": "IF-CopyData",
+                                "dependencyConditions": [
+                                    "Succeeded"
+                                ]
+                            }
+                        ],
+                        "userProperties": [],
+                        "typeProperties": {
+                            "expression": {
+                                "value": "@{and(not(equals(activity('LU-Metadata').output.firstRow.TransformationSP, '')), activity('LU-Metadata').output.firstRow.ExtractionFlag)}",
+                                "type": "Expression"
+                            },
+                            "ifTrueActivities": [
+                                {
+                                    "name": "SP-Transform",
+                                    "description": "Load data to INT table",
+                                    "type": "SqlServerStoredProcedure",
+                                    "dependsOn": [],
+                                    "policy": {
+                                        "timeout": "7.00:00:00",
+                                        "retry": 0,
+                                        "retryIntervalInSeconds": 30
+                                    },
+                                    "userProperties": [],
+                                    "typeProperties": {
+                                        "storedProcedureName": {
+                                            "value": "@{activity('LU-Metadata').output.firstRow.TransformationSP}",
+                                            "type": "Expression"
+                                        }
+                                    },
+                                    "linkedServiceName": {
+                                        "referenceName": "LinkedServiceTargetDatabase",
+                                        "type": "LinkedServiceReference"
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    {
+                        "name": "SP-FinishLog",
+                        "description": "Initiate the end of the Pipeline",
+                        "type": "SqlServerStoredProcedure",
+                        "dependsOn": [
+                            {
+                                "activity": "IF-SPTransformData",
+                                "dependencyConditions": [
+                                    "Succeeded"
+                                ]
+                            }
+                        ],
+                        "policy": {
+                            "timeout": "7.00:00:00",
+                            "retry": 0,
+                            "retryIntervalInSeconds": 30
+                        },
+                        "userProperties": [],
+                        "typeProperties": {
+                            "storedProcedureName": "UTIL.spPipelineExecutionFinish",
+                            "storedProcedureParameters": {
+                                "RunID": {
+                                    "value": {
+                                        "value": "@pipeline().RunId",
+                                        "type": "Expression"
+                                    },
+                                    "type": "Guid"
+                                }
+                            }
+                        },
+                        "linkedServiceName": {
+                            "referenceName": "LinkedServiceTargetDatabase",
+                            "type": "LinkedServiceReference"
+                        }
+                    },
+                    {
+                        "name": "AF-CheckFile",
+                        "type": "AzureFunctionActivity",
+                        "dependsOn": [
+                            {
+                                "activity": "LU-Metadata",
+                                "dependencyConditions": [
+                                    "Succeeded"
+                                ]
+                            }
+                        ],
+                        "policy": {
+                            "timeout": "7.00:00:00",
+                            "retry": 0,
+                            "retryIntervalInSeconds": 30,
+                            "secureOutput": false,
+                            "secureInput": false
+                        },
+                        "userProperties": [
+                            {
+                                "name": "op",
+                                "value": "copy"
+                            }
+                        ],
+                        "typeProperties": {
+                            "functionName": {
+                                "value": "@concat('AzFnFileService?op=exist&inputfolder=', activity('LU-Metadata').output.firstRow.SourceFolder, '&file=', activity('LU-Metadata').output.firstRow.SourceFile)",
+                                "type": "Expression"
+                            },
+                            "method": "GET",
+                            "headers": {},
+                            "body": ""
+                        },
+                        "linkedServiceName": {
+                            "referenceName": "LinkedServiceAzureFunction",
+                            "type": "LinkedServiceReference"
+                        }
+                    }
+                ],
+                "parameters": {
+                    "SourceSystem": {
+                        "type": "String",
+                        "defaultValue": "Az-FileStorage"
+                    },
+                    "SourceFile": {
+                        "type": "String",
+                        "defaultValue": "AUS-State.csv"
+                    }
+                },
+                "folder": {
+                    "name": "Framework"
+                },
+                "annotations": []
+            },
+            "dependsOn": [
+                "[concat(variables('factoryId'), '/linkedServices/LinkedServiceTargetDatabase')]",
+                "[concat(variables('factoryId'), '/datasets/DSDataLoadMetadata')]",
+                "[concat(variables('factoryId'), '/linkedServices/LinkedServiceAzureFunction')]",
+                "[concat(variables('factoryId'), '/datasets/DSTextFileGeneral')]",
+                "[concat(variables('factoryId'), '/datasets/DSDBSinkGeneral')]"
+            ]
+        },
         {
             "name": "[concat(parameters('factoryName'), '/PL-Framework-FromOnPrem-ToDataLake')]",
             "type": "Microsoft.DataFactory/factories/pipelines",
@@ -738,353 +1085,6 @@
             ]
         },
         {
-            "name": "[concat(parameters('factoryName'), '/PL-Framework-FromFile-ToAzure')]",
-            "type": "Microsoft.DataFactory/factories/pipelines",
-            "apiVersion": "2018-06-01",
-            "properties": {
-                "activities": [
-                    {
-                        "name": "SP-InitiateLog",
-                        "description": "Initiate the start of the Pipeline",
-                        "type": "SqlServerStoredProcedure",
-                        "dependsOn": [],
-                        "policy": {
-                            "timeout": "7.00:00:00",
-                            "retry": 0,
-                            "retryIntervalInSeconds": 30
-                        },
-                        "userProperties": [],
-                        "typeProperties": {
-                            "storedProcedureName": "UTIL.spPipelineExecutionInitiate",
-                            "storedProcedureParameters": {
-                                "DataFactoryName": {
-                                    "value": {
-                                        "value": "@pipeline().DataFactory",
-                                        "type": "Expression"
-                                    },
-                                    "type": "String"
-                                },
-                                "PipelineName": {
-                                    "value": {
-                                        "value": "@pipeline().Pipeline",
-                                        "type": "Expression"
-                                    },
-                                    "type": "String"
-                                },
-                                "RunID": {
-                                    "value": {
-                                        "value": "@pipeline().RunId",
-                                        "type": "Expression"
-                                    },
-                                    "type": "Guid"
-                                },
-                                "Message": {
-                                    "value": {
-                                        "value": "@{pipeline().parameters.SourceFile}",
-                                        "type": "Expression"
-                                    },
-                                    "type": "String"
-                                }
-                            }
-                        },
-                        "linkedServiceName": {
-                            "referenceName": "LinkedServiceTargetDatabase",
-                            "type": "LinkedServiceReference"
-                        }
-                    },
-                    {
-                        "name": "LU-Metadata",
-                        "type": "Lookup",
-                        "dependsOn": [
-                            {
-                                "activity": "SP-InitiateLog",
-                                "dependencyConditions": [
-                                    "Succeeded"
-                                ]
-                            }
-                        ],
-                        "policy": {
-                            "timeout": "7.00:00:00",
-                            "retry": 0,
-                            "retryIntervalInSeconds": 30
-                        },
-                        "userProperties": [],
-                        "typeProperties": {
-                            "source": {
-                                "type": "SqlSource",
-                                "sqlReaderQuery": {
-                                    "value": "SELECT * FROM UTIL.[vDataLoadMetaData_FromFile_ToTable] WHERE SourceSystem = '@{pipeline().parameters.SourceSystem}' AND SourceFile = '@{pipeline().parameters.SourceFile}'",
-                                    "type": "Expression"
-                                }
-                            },
-                            "dataset": {
-                                "referenceName": "DSDataLoadMetadata",
-                                "type": "DatasetReference",
-                                "parameters": {}
-                            }
-                        }
-                    },
-                    {
-                        "name": "IF-CopyData",
-                        "type": "IfCondition",
-                        "dependsOn": [
-                            {
-                                "activity": "AF-CheckFile",
-                                "dependencyConditions": [
-                                    "Succeeded"
-                                ]
-                            }
-                        ],
-                        "userProperties": [],
-                        "typeProperties": {
-                            "expression": {
-                                "value": "@activity('AF-CheckFile').output.Exists",
-                                "type": "Expression"
-                            },
-                            "ifTrueActivities": [
-                                {
-                                    "name": "COPY-FileToStage",
-                                    "type": "Copy",
-                                    "dependsOn": [],
-                                    "policy": {
-                                        "timeout": "7.00:00:00",
-                                        "retry": 0,
-                                        "retryIntervalInSeconds": 30
-                                    },
-                                    "userProperties": [],
-                                    "typeProperties": {
-                                        "source": {
-                                            "type": "FileSystemSource",
-                                            "recursive": true
-                                        },
-                                        "sink": {
-                                            "type": "SqlSink",
-                                            "writeBatchSize": 10000,
-                                            "preCopyScript": {
-                                                "value": "TRUNCATE TABLE @{activity('LU-Metadata').output.firstRow.TargetObject}",
-                                                "type": "Expression"
-                                            }
-                                        },
-                                        "enableStaging": false,
-                                        "dataIntegrationUnits": 0
-                                    },
-                                    "inputs": [
-                                        {
-                                            "referenceName": "DSTextFileGeneral",
-                                            "type": "DatasetReference",
-                                            "parameters": {
-                                                "columnDelimiter": {
-                                                    "value": "@{activity('LU-Metadata').output.firstRow.ColumnDelimiter}",
-                                                    "type": "Expression"
-                                                },
-                                                "rowDelimiter": {
-                                                    "value": "@{activity('LU-Metadata').output.firstRow.RowDelimiter}",
-                                                    "type": "Expression"
-                                                },
-                                                "firstRowAsHeader": {
-                                                    "value": "@{activity('LU-Metadata').output.firstRow.FirstRowHeader}",
-                                                    "type": "Expression"
-                                                },
-                                                "folderPath": {
-                                                    "value": "@{activity('LU-Metadata').output.firstRow.SourceFolder}",
-                                                    "type": "Expression"
-                                                },
-                                                "fileName": {
-                                                    "value": "@{activity('LU-Metadata').output.firstRow.SourceFile}",
-                                                    "type": "Expression"
-                                                }
-                                            }
-                                        }
-                                    ],
-                                    "outputs": [
-                                        {
-                                            "referenceName": "DSDBSinkGeneral",
-                                            "type": "DatasetReference",
-                                            "parameters": {
-                                                "SinkTableName": {
-                                                    "value": "@{activity('LU-Metadata').output.firstRow.TargetObject}",
-                                                    "type": "Expression"
-                                                }
-                                            }
-                                        }
-                                    ]
-                                },
-                                {
-                                    "name": "Az-MoveFile",
-                                    "type": "AzureFunctionActivity",
-                                    "dependsOn": [
-                                        {
-                                            "activity": "COPY-FileToStage",
-                                            "dependencyConditions": [
-                                                "Succeeded"
-                                            ]
-                                        }
-                                    ],
-                                    "policy": {
-                                        "timeout": "7.00:00:00",
-                                        "retry": 0,
-                                        "retryIntervalInSeconds": 30,
-                                        "secureOutput": false,
-                                        "secureInput": false
-                                    },
-                                    "userProperties": [],
-                                    "typeProperties": {
-                                        "functionName": {
-                                            "value": "@concat('AzFnFileService?op=move&inputfolder=', activity('LU-Metadata').output.firstRow.SourceFolder, '&file=', activity('LU-Metadata').output.firstRow.SourceFile, '&targetfolder=', activity('LU-Metadata').output.firstRow.ArchiveFolder, '&PrefixDateTime=Y')",
-                                            "type": "Expression"
-                                        },
-                                        "method": "GET",
-                                        "headers": {}
-                                    },
-                                    "linkedServiceName": {
-                                        "referenceName": "LinkedServiceAzureFunction",
-                                        "type": "LinkedServiceReference"
-                                    }
-                                }
-                            ]
-                        }
-                    },
-                    {
-                        "name": "IF-SPTransformData",
-                        "type": "IfCondition",
-                        "dependsOn": [
-                            {
-                                "activity": "IF-CopyData",
-                                "dependencyConditions": [
-                                    "Succeeded"
-                                ]
-                            }
-                        ],
-                        "userProperties": [],
-                        "typeProperties": {
-                            "expression": {
-                                "value": "@{and(not(equals(activity('LU-Metadata').output.firstRow.TransformationSP, '')), activity('LU-Metadata').output.firstRow.ExtractionFlag)}",
-                                "type": "Expression"
-                            },
-                            "ifTrueActivities": [
-                                {
-                                    "name": "SP-Transform",
-                                    "description": "Load data to INT table",
-                                    "type": "SqlServerStoredProcedure",
-                                    "dependsOn": [],
-                                    "policy": {
-                                        "timeout": "7.00:00:00",
-                                        "retry": 0,
-                                        "retryIntervalInSeconds": 30
-                                    },
-                                    "userProperties": [],
-                                    "typeProperties": {
-                                        "storedProcedureName": {
-                                            "value": "@{activity('LU-Metadata').output.firstRow.TransformationSP}",
-                                            "type": "Expression"
-                                        }
-                                    },
-                                    "linkedServiceName": {
-                                        "referenceName": "LinkedServiceTargetDatabase",
-                                        "type": "LinkedServiceReference"
-                                    }
-                                }
-                            ]
-                        }
-                    },
-                    {
-                        "name": "SP-FinishLog",
-                        "description": "Initiate the end of the Pipeline",
-                        "type": "SqlServerStoredProcedure",
-                        "dependsOn": [
-                            {
-                                "activity": "IF-SPTransformData",
-                                "dependencyConditions": [
-                                    "Succeeded"
-                                ]
-                            }
-                        ],
-                        "policy": {
-                            "timeout": "7.00:00:00",
-                            "retry": 0,
-                            "retryIntervalInSeconds": 30
-                        },
-                        "userProperties": [],
-                        "typeProperties": {
-                            "storedProcedureName": "UTIL.spPipelineExecutionFinish",
-                            "storedProcedureParameters": {
-                                "RunID": {
-                                    "value": {
-                                        "value": "@pipeline().RunId",
-                                        "type": "Expression"
-                                    },
-                                    "type": "Guid"
-                                }
-                            }
-                        },
-                        "linkedServiceName": {
-                            "referenceName": "LinkedServiceTargetDatabase",
-                            "type": "LinkedServiceReference"
-                        }
-                    },
-                    {
-                        "name": "AF-CheckFile",
-                        "type": "AzureFunctionActivity",
-                        "dependsOn": [
-                            {
-                                "activity": "LU-Metadata",
-                                "dependencyConditions": [
-                                    "Succeeded"
-                                ]
-                            }
-                        ],
-                        "policy": {
-                            "timeout": "7.00:00:00",
-                            "retry": 0,
-                            "retryIntervalInSeconds": 30,
-                            "secureOutput": false,
-                            "secureInput": false
-                        },
-                        "userProperties": [
-                            {
-                                "name": "op",
-                                "value": "copy"
-                            }
-                        ],
-                        "typeProperties": {
-                            "functionName": {
-                                "value": "@concat('AzFnFileService?op=exist&inputfolder=', activity('LU-Metadata').output.firstRow.SourceFolder, '&file=', activity('LU-Metadata').output.firstRow.SourceFile)",
-                                "type": "Expression"
-                            },
-                            "method": "GET",
-                            "headers": {},
-                            "body": ""
-                        },
-                        "linkedServiceName": {
-                            "referenceName": "LinkedServiceAzureFunction",
-                            "type": "LinkedServiceReference"
-                        }
-                    }
-                ],
-                "parameters": {
-                    "SourceSystem": {
-                        "type": "String",
-                        "defaultValue": "Az-FileStorage"
-                    },
-                    "SourceFile": {
-                        "type": "String",
-                        "defaultValue": "AUS-State.csv"
-                    }
-                },
-                "folder": {
-                    "name": "Framework"
-                },
-                "annotations": []
-            },
-            "dependsOn": [
-                "[concat(variables('factoryId'), '/linkedServices/LinkedServiceTargetDatabase')]",
-                "[concat(variables('factoryId'), '/datasets/DSDataLoadMetadata')]",
-                "[concat(variables('factoryId'), '/linkedServices/LinkedServiceAzureFunction')]",
-                "[concat(variables('factoryId'), '/datasets/DSTextFileGeneral')]",
-                "[concat(variables('factoryId'), '/datasets/DSDBSinkGeneral')]"
-            ]
-        },
-        {
             "name": "[concat(parameters('factoryName'), '/PL-Framework-FromAzure-ToDataLake')]",
             "type": "Microsoft.DataFactory/factories/pipelines",
             "apiVersion": "2018-06-01",
@@ -1579,548 +1579,6 @@
                 "[concat(variables('factoryId'), '/datasets/DSDataLoadMetadata')]",
                 "[concat(variables('factoryId'), '/datasets/DSDBSourceAzureGeneral')]",
                 "[concat(variables('factoryId'), '/datasets/DSDataLakeGeneral')]"
-            ]
-        },
-        {
-            "name": "[concat(parameters('factoryName'), '/PL-Framework-FromAzure-ToAzure')]",
-            "type": "Microsoft.DataFactory/factories/pipelines",
-            "apiVersion": "2018-06-01",
-            "properties": {
-                "activities": [
-                    {
-                        "name": "SP-InitiateLog",
-                        "description": "Initiate the start of the Pipeline.",
-                        "type": "SqlServerStoredProcedure",
-                        "dependsOn": [],
-                        "policy": {
-                            "timeout": "7.00:00:00",
-                            "retry": 0,
-                            "retryIntervalInSeconds": 30,
-                            "secureOutput": false
-                        },
-                        "userProperties": [],
-                        "typeProperties": {
-                            "storedProcedureName": "[concat('[', 'UTIL].[spPipelineExecutionInitiate]')]",
-                            "storedProcedureParameters": {
-                                "DataFactoryName": {
-                                    "value": {
-                                        "value": "@pipeline().DataFactory",
-                                        "type": "Expression"
-                                    },
-                                    "type": "String"
-                                },
-                                "PipelineName": {
-                                    "value": {
-                                        "value": "@pipeline().Pipeline",
-                                        "type": "Expression"
-                                    },
-                                    "type": "String"
-                                },
-                                "RunID": {
-                                    "value": {
-                                        "value": "@pipeline().RunId",
-                                        "type": "Expression"
-                                    },
-                                    "type": "Guid"
-                                },
-                                "Message": {
-                                    "value": {
-                                        "value": "@concat(pipeline().parameters.SourceSchema, '.', pipeline().parameters.SourceTable)",
-                                        "type": "Expression"
-                                    },
-                                    "type": "String"
-                                }
-                            }
-                        },
-                        "linkedServiceName": {
-                            "referenceName": "LinkedServiceTargetDatabase",
-                            "type": "LinkedServiceReference"
-                        }
-                    },
-                    {
-                        "name": "LU-Metadata",
-                        "description": "Get the metadata for the current object from the SQL Table UTIL.DataLoadMetadata. The metadata should have all information required to load the object.",
-                        "type": "Lookup",
-                        "dependsOn": [
-                            {
-                                "activity": "SP-InitiateLog",
-                                "dependencyConditions": [
-                                    "Succeeded"
-                                ]
-                            }
-                        ],
-                        "policy": {
-                            "timeout": "7.00:00:00",
-                            "retry": 0,
-                            "retryIntervalInSeconds": 30,
-                            "secureOutput": false
-                        },
-                        "userProperties": [],
-                        "typeProperties": {
-                            "source": {
-                                "type": "SqlSource",
-                                "sqlReaderQuery": {
-                                    "value": "SELECT * FROM UTIL.[vDataLoadMetaData_FromTable_ToTable] WHERE SourceSystem = '@{pipeline().parameters.SourceSystem}' AND SourceSchema = '@{pipeline().parameters.SourceSchema}' AND SourceTable = '@{pipeline().parameters.SourceTable}'",
-                                    "type": "Expression"
-                                }
-                            },
-                            "dataset": {
-                                "referenceName": "DSDataLoadMetadata",
-                                "type": "DatasetReference",
-                                "parameters": {}
-                            }
-                        }
-                    },
-                    {
-                        "name": "SP-FinishLog",
-                        "description": "Initiate the end of the Pipeline",
-                        "type": "SqlServerStoredProcedure",
-                        "dependsOn": [
-                            {
-                                "activity": "IF-LastExtractionUpdate",
-                                "dependencyConditions": [
-                                    "Succeeded"
-                                ]
-                            }
-                        ],
-                        "policy": {
-                            "timeout": "7.00:00:00",
-                            "retry": 0,
-                            "retryIntervalInSeconds": 30,
-                            "secureOutput": false
-                        },
-                        "userProperties": [],
-                        "typeProperties": {
-                            "storedProcedureName": "UTIL.spPipelineExecutionFinish",
-                            "storedProcedureParameters": {
-                                "RunID": {
-                                    "value": {
-                                        "value": "@pipeline().RunId",
-                                        "type": "Expression"
-                                    },
-                                    "type": "Guid"
-                                }
-                            }
-                        },
-                        "linkedServiceName": {
-                            "referenceName": "LinkedServiceTargetDatabase",
-                            "type": "LinkedServiceReference"
-                        }
-                    },
-                    {
-                        "name": "IF-CopyData",
-                        "description": "Copy data from Source to Sink if the Extraction Flag is true",
-                        "type": "IfCondition",
-                        "dependsOn": [
-                            {
-                                "activity": "IF-SourceSQL",
-                                "dependencyConditions": [
-                                    "Succeeded"
-                                ]
-                            }
-                        ],
-                        "userProperties": [],
-                        "typeProperties": {
-                            "expression": {
-                                "value": "@{activity('LU-Metadata').output.firstRow.ExtractionFlag}",
-                                "type": "Expression"
-                            },
-                            "ifTrueActivities": [
-                                {
-                                    "name": "COPY-SourceToStage",
-                                    "type": "Copy",
-                                    "dependsOn": [],
-                                    "policy": {
-                                        "timeout": "7.00:00:00",
-                                        "retry": 0,
-                                        "retryIntervalInSeconds": 30,
-                                        "secureOutput": false
-                                    },
-                                    "userProperties": [],
-                                    "typeProperties": {
-                                        "source": {
-                                            "type": "SqlSource",
-                                            "sqlReaderQuery": {
-                                                "value": "@variables('SourceSQL')",
-                                                "type": "Expression"
-                                            }
-                                        },
-                                        "sink": {
-                                            "type": "SqlSink",
-                                            "writeBatchSize": 10000,
-                                            "preCopyScript": {
-                                                "value": "TRUNCATE TABLE @{activity('LU-Metadata').output.firstRow.TargetObject}",
-                                                "type": "Expression"
-                                            }
-                                        },
-                                        "enableStaging": false,
-                                        "dataIntegrationUnits": 0
-                                    },
-                                    "inputs": [
-                                        {
-                                            "referenceName": "DSDBSourceAzureGeneral",
-                                            "type": "DatasetReference",
-                                            "parameters": {
-                                                "DBName": {
-                                                    "value": "@activity('LU-Metadata').output.firstRow.SourceDatabase",
-                                                    "type": "Expression"
-                                                }
-                                            }
-                                        }
-                                    ],
-                                    "outputs": [
-                                        {
-                                            "referenceName": "DSDBSinkGeneral",
-                                            "type": "DatasetReference",
-                                            "parameters": {
-                                                "SinkTableName": {
-                                                    "value": "@{activity('LU-Metadata').output.firstRow.TargetObject}",
-                                                    "type": "Expression"
-                                                }
-                                            }
-                                        }
-                                    ]
-                                }
-                            ]
-                        }
-                    },
-                    {
-                        "name": "IF-SPTransformData",
-                        "description": "Check if the Extraction Flag is true and a Stored Procedure name is specified for transformation post data load ",
-                        "type": "IfCondition",
-                        "dependsOn": [
-                            {
-                                "activity": "IF-CopyData",
-                                "dependencyConditions": [
-                                    "Succeeded"
-                                ]
-                            }
-                        ],
-                        "userProperties": [],
-                        "typeProperties": {
-                            "expression": {
-                                "value": "@{and(not(equals(activity('LU-Metadata').output.firstRow.TransformationSP, '')), activity('LU-Metadata').output.firstRow.ExtractionFlag)}",
-                                "type": "Expression"
-                            },
-                            "ifTrueActivities": [
-                                {
-                                    "name": "SP-Transform",
-                                    "type": "SqlServerStoredProcedure",
-                                    "dependsOn": [],
-                                    "policy": {
-                                        "timeout": "7.00:00:00",
-                                        "retry": 0,
-                                        "retryIntervalInSeconds": 30,
-                                        "secureOutput": false
-                                    },
-                                    "userProperties": [],
-                                    "typeProperties": {
-                                        "storedProcedureName": {
-                                            "value": "@{activity('LU-Metadata').output.firstRow.TransformationSP}",
-                                            "type": "Expression"
-                                        }
-                                    },
-                                    "linkedServiceName": {
-                                        "referenceName": "LinkedServiceTargetDatabase",
-                                        "type": "LinkedServiceReference"
-                                    }
-                                }
-                            ]
-                        }
-                    },
-                    {
-                        "name": "IF-LastExtractionUpdate",
-                        "description": "Update the metadata with LastExtraction Value",
-                        "type": "IfCondition",
-                        "dependsOn": [
-                            {
-                                "activity": "IF-SPTransformData",
-                                "dependencyConditions": [
-                                    "Succeeded"
-                                ]
-                            }
-                        ],
-                        "userProperties": [],
-                        "typeProperties": {
-                            "expression": {
-                                "value": "@{and(activity('LU-Metadata').output.firstRow.IncrementalLoadFlag, activity('LU-Metadata').output.firstRow.ExtractionFlag)}",
-                                "type": "Expression"
-                            },
-                            "ifTrueActivities": [
-                                {
-                                    "name": "SP-UpdateLastExtraction",
-                                    "type": "SqlServerStoredProcedure",
-                                    "dependsOn": [],
-                                    "policy": {
-                                        "timeout": "7.00:00:00",
-                                        "retry": 0,
-                                        "retryIntervalInSeconds": 30,
-                                        "secureOutput": false
-                                    },
-                                    "userProperties": [],
-                                    "typeProperties": {
-                                        "storedProcedureName": "[concat('[', 'UTIL].[spUpdateLastExtraction]')]",
-                                        "storedProcedureParameters": {
-                                            "LastExtractionCounter": {
-                                                "value": {
-                                                    "value": "@variables('LastExtractionCounter')",
-                                                    "type": "Expression"
-                                                },
-                                                "type": "Int64"
-                                            },
-                                            "LastExtractionTime": {
-                                                "value": {
-                                                    "value": "@variables('LastExtractionTime')",
-                                                    "type": "Expression"
-                                                },
-                                                "type": "DateTime"
-                                            },
-                                            "RecordID": {
-                                                "value": {
-                                                    "value": "@{activity('LU-Metadata').output.firstRow.RecordID}",
-                                                    "type": "Expression"
-                                                },
-                                                "type": "Guid"
-                                            }
-                                        }
-                                    },
-                                    "linkedServiceName": {
-                                        "referenceName": "LinkedServiceTargetDatabase",
-                                        "type": "LinkedServiceReference"
-                                    }
-                                }
-                            ]
-                        }
-                    },
-                    {
-                        "name": "IF-SourceSQL",
-                        "description": "Update the Source SQL in the variable. If Incremental Load then update the Last Extraction Value in the SQL",
-                        "type": "IfCondition",
-                        "dependsOn": [
-                            {
-                                "activity": "IF-IncrementalLoad",
-                                "dependencyConditions": [
-                                    "Succeeded"
-                                ]
-                            }
-                        ],
-                        "userProperties": [],
-                        "typeProperties": {
-                            "expression": {
-                                "value": "@{and(activity('LU-Metadata').output.firstRow.IncrementalLoadFlag, activity('LU-Metadata').output.firstRow.ExtractionFlag)}",
-                                "type": "Expression"
-                            },
-                            "ifFalseActivities": [
-                                {
-                                    "name": "SET-SourceSQL-Full",
-                                    "type": "SetVariable",
-                                    "dependsOn": [],
-                                    "userProperties": [],
-                                    "typeProperties": {
-                                        "variableName": "SourceSQL",
-                                        "value": {
-                                            "value": "@activity('LU-Metadata').output.firstRow.SourceSQL",
-                                            "type": "Expression"
-                                        }
-                                    }
-                                }
-                            ],
-                            "ifTrueActivities": [
-                                {
-                                    "name": "SET-LastExtractionVal",
-                                    "description": "Set the Incremental Load Value to be used in Source SQL later",
-                                    "type": "SetVariable",
-                                    "dependsOn": [],
-                                    "userProperties": [],
-                                    "typeProperties": {
-                                        "variableName": "IncrementalLoadValue",
-                                        "value": {
-                                            "value": "@{if(equals(activity('LU-Metadata').output.firstRow.IncrementalLoadColumnType, 'DATE'), concat('''', activity('LU-Metadata').output.firstRow.LastExtractionTime, ''''), activity('LU-Metadata').output.firstRow.LastExtractionCounter)}",
-                                            "type": "Expression"
-                                        }
-                                    }
-                                },
-                                {
-                                    "name": "SET-SourceSQL-Incremental",
-                                    "description": "Update the Source SQL with the Incremental Load value",
-                                    "type": "SetVariable",
-                                    "dependsOn": [
-                                        {
-                                            "activity": "SET-LastExtractionVal",
-                                            "dependencyConditions": [
-                                                "Succeeded"
-                                            ]
-                                        }
-                                    ],
-                                    "userProperties": [],
-                                    "typeProperties": {
-                                        "variableName": "SourceSQL",
-                                        "value": {
-                                            "value": "@replace(activity('LU-Metadata').output.firstRow.SourceSQL, '{LASTEXTRACTION}', variables('IncrementalLoadValue'))",
-                                            "type": "Expression"
-                                        }
-                                    }
-                                }
-                            ]
-                        }
-                    },
-                    {
-                        "name": "IF-IncrementalLoad",
-                        "description": "If the current object is Incremental Load, then get the current timestamp and counter from the Source Database",
-                        "type": "IfCondition",
-                        "dependsOn": [
-                            {
-                                "activity": "LU-Metadata",
-                                "dependencyConditions": [
-                                    "Succeeded"
-                                ]
-                            }
-                        ],
-                        "userProperties": [],
-                        "typeProperties": {
-                            "expression": {
-                                "value": "@{and(activity('LU-Metadata').output.firstRow.IncrementalLoadFlag, activity('LU-Metadata').output.firstRow.ExtractionFlag)}",
-                                "type": "Expression"
-                            },
-                            "ifFalseActivities": [
-                                {
-                                    "name": "SET-LastExtractionCounter-Default",
-                                    "type": "SetVariable",
-                                    "dependsOn": [],
-                                    "userProperties": [],
-                                    "typeProperties": {
-                                        "variableName": "LastExtractionCounter",
-                                        "value": "0"
-                                    }
-                                },
-                                {
-                                    "name": "SET-LastExtractionTime-Default",
-                                    "type": "SetVariable",
-                                    "dependsOn": [],
-                                    "userProperties": [],
-                                    "typeProperties": {
-                                        "variableName": "LastExtractionTime",
-                                        "value": {
-                                            "value": "@utcnow()",
-                                            "type": "Expression"
-                                        }
-                                    }
-                                }
-                            ],
-                            "ifTrueActivities": [
-                                {
-                                    "name": "LU-GetCurrentExtractionVal",
-                                    "description": "Get the Last Extraction Values from the Source Database",
-                                    "type": "Lookup",
-                                    "dependsOn": [],
-                                    "policy": {
-                                        "timeout": "7.00:00:00",
-                                        "retry": 0,
-                                        "retryIntervalInSeconds": 30,
-                                        "secureOutput": false,
-                                        "secureInput": false
-                                    },
-                                    "userProperties": [],
-                                    "typeProperties": {
-                                        "source": {
-                                            "type": "SqlSource",
-                                            "sqlReaderQuery": "SELECT GETDATE() AS LastDateTime, CONVERT(VARCHAR, CONVERT(bigint, @@DBTS)) AS LastTSCounter"
-                                        },
-                                        "dataset": {
-                                            "referenceName": "DSDBSourceAzureGeneral",
-                                            "type": "DatasetReference",
-                                            "parameters": {
-                                                "DBName": {
-                                                    "value": "@activity('LU-Metadata').output.firstRow.SourceDatabase\n",
-                                                    "type": "Expression"
-                                                }
-                                            }
-                                        }
-                                    }
-                                },
-                                {
-                                    "name": "SET-LastExtractionCounter",
-                                    "description": "Set the value for Last Extraction Counter. If Timestamp or actual column.",
-                                    "type": "SetVariable",
-                                    "dependsOn": [
-                                        {
-                                            "activity": "LU-GetCurrentExtractionVal",
-                                            "dependencyConditions": [
-                                                "Succeeded"
-                                            ]
-                                        }
-                                    ],
-                                    "userProperties": [],
-                                    "typeProperties": {
-                                        "variableName": "LastExtractionCounter",
-                                        "value": {
-                                            "value": "@activity('LU-GetCurrentExtractionVal').output.firstRow.LastTSCounter",
-                                            "type": "Expression"
-                                        }
-                                    }
-                                },
-                                {
-                                    "name": "SET-LastExtractionTime",
-                                    "type": "SetVariable",
-                                    "dependsOn": [
-                                        {
-                                            "activity": "LU-GetCurrentExtractionVal",
-                                            "dependencyConditions": [
-                                                "Succeeded"
-                                            ]
-                                        }
-                                    ],
-                                    "userProperties": [],
-                                    "typeProperties": {
-                                        "variableName": "LastExtractionTime",
-                                        "value": {
-                                            "value": "@activity('LU-GetCurrentExtractionVal').output.firstRow.LastDateTime",
-                                            "type": "Expression"
-                                        }
-                                    }
-                                }
-                            ]
-                        }
-                    }
-                ],
-                "parameters": {
-                    "SourceSystem": {
-                        "type": "String",
-                        "defaultValue": "Src-Azure"
-                    },
-                    "SourceSchema": {
-                        "type": "String",
-                        "defaultValue": "Application"
-                    },
-                    "SourceTable": {
-                        "type": "String",
-                        "defaultValue": "Cities"
-                    }
-                },
-                "variables": {
-                    "SourceSQL": {
-                        "type": "String"
-                    },
-                    "IncrementalLoadValue": {
-                        "type": "String"
-                    },
-                    "LastExtractionCounter": {
-                        "type": "String"
-                    },
-                    "LastExtractionTime": {
-                        "type": "String"
-                    }
-                },
-                "folder": {
-                    "name": "Framework"
-                },
-                "annotations": []
-            },
-            "dependsOn": [
-                "[concat(variables('factoryId'), '/linkedServices/LinkedServiceTargetDatabase')]",
-                "[concat(variables('factoryId'), '/datasets/DSDataLoadMetadata')]",
-                "[concat(variables('factoryId'), '/datasets/DSDBSourceAzureGeneral')]",
-                "[concat(variables('factoryId'), '/datasets/DSDBSinkGeneral')]"
             ]
         },
         {
@@ -2674,79 +2132,85 @@
             ]
         },
         {
-            "name": "[concat(parameters('factoryName'), '/PL-Executor-OnPrem-DataLake')]",
+            "name": "[concat(parameters('factoryName'), '/PL-Framework-FromAzure-ToAzure')]",
             "type": "Microsoft.DataFactory/factories/pipelines",
             "apiVersion": "2018-06-01",
             "properties": {
                 "activities": [
                     {
-                        "name": "Loop-Tables",
-                        "type": "ForEach",
-                        "dependsOn": [
-                            {
-                                "activity": "LU-GetTableList",
-                                "dependencyConditions": [
-                                    "Succeeded"
-                                ]
-                            }
-                        ],
-                        "userProperties": [],
-                        "typeProperties": {
-                            "items": {
-                                "value": "@activity('LU-GetTableList').output.value",
-                                "type": "Expression"
-                            },
-                            "isSequential": false,
-                            "batchCount": 4,
-                            "activities": [
-                                {
-                                    "name": "EP-Framework",
-                                    "type": "ExecutePipeline",
-                                    "dependsOn": [],
-                                    "userProperties": [],
-                                    "typeProperties": {
-                                        "pipeline": {
-                                            "referenceName": "PL-Framework-FromOnPrem-ToDataLake",
-                                            "type": "PipelineReference"
-                                        },
-                                        "waitOnCompletion": false,
-                                        "parameters": {
-                                            "SourceSystem": {
-                                                "value": "@item().SourceSystem",
-                                                "type": "Expression"
-                                            },
-                                            "SourceSchema": {
-                                                "value": "@item().SourceSchema",
-                                                "type": "Expression"
-                                            },
-                                            "SourceTable": {
-                                                "value": "@item().SourceTable",
-                                                "type": "Expression"
-                                            }
-                                        }
-                                    }
-                                }
-                            ]
-                        }
-                    },
-                    {
-                        "name": "LU-GetTableList",
-                        "description": "Get the list of tables to load from the Metadata table",
-                        "type": "Lookup",
+                        "name": "SP-InitiateLog",
+                        "description": "Initiate the start of the Pipeline.",
+                        "type": "SqlServerStoredProcedure",
                         "dependsOn": [],
                         "policy": {
                             "timeout": "7.00:00:00",
                             "retry": 0,
                             "retryIntervalInSeconds": 30,
-                            "secureOutput": false,
-                            "secureInput": false
+                            "secureOutput": false
+                        },
+                        "userProperties": [],
+                        "typeProperties": {
+                            "storedProcedureName": "[concat('[', 'UTIL].[spPipelineExecutionInitiate]')]",
+                            "storedProcedureParameters": {
+                                "DataFactoryName": {
+                                    "value": {
+                                        "value": "@pipeline().DataFactory",
+                                        "type": "Expression"
+                                    },
+                                    "type": "String"
+                                },
+                                "PipelineName": {
+                                    "value": {
+                                        "value": "@pipeline().Pipeline",
+                                        "type": "Expression"
+                                    },
+                                    "type": "String"
+                                },
+                                "RunID": {
+                                    "value": {
+                                        "value": "@pipeline().RunId",
+                                        "type": "Expression"
+                                    },
+                                    "type": "Guid"
+                                },
+                                "Message": {
+                                    "value": {
+                                        "value": "@concat(pipeline().parameters.SourceSchema, '.', pipeline().parameters.SourceTable)",
+                                        "type": "Expression"
+                                    },
+                                    "type": "String"
+                                }
+                            }
+                        },
+                        "linkedServiceName": {
+                            "referenceName": "LinkedServiceTargetDatabase",
+                            "type": "LinkedServiceReference"
+                        }
+                    },
+                    {
+                        "name": "LU-Metadata",
+                        "description": "Get the metadata for the current object from the SQL Table UTIL.DataLoadMetadata. The metadata should have all information required to load the object.",
+                        "type": "Lookup",
+                        "dependsOn": [
+                            {
+                                "activity": "SP-InitiateLog",
+                                "dependencyConditions": [
+                                    "Succeeded"
+                                ]
+                            }
+                        ],
+                        "policy": {
+                            "timeout": "7.00:00:00",
+                            "retry": 0,
+                            "retryIntervalInSeconds": 30,
+                            "secureOutput": false
                         },
                         "userProperties": [],
                         "typeProperties": {
                             "source": {
                                 "type": "SqlSource",
                                 "sqlReaderQuery": {
-                                    "value": "SELECT * FROM UTIL.vDataLoadMetaData_FromTable_ToFile WHERE SourceSystem = '@{pipeline().parameters.SourceSystem}' AND TargetSystem = 'ADLS'",
+                                    "value": "SELECT * FROM UTIL.[vDataLoadMetaData_FromTable_ToTable] WHERE SourceSystem = '@{pipeline().parameters.SourceSystem}' AND SourceSchema = '@{pipeline().parameters.SourceSchema}' AND SourceTable = '@{pipeline().parameters.SourceTable}'",
                                     "type": "Expression"
                                 }
                             },
@@ -2754,25 +2218,459 @@
                                 "referenceName": "DSDataLoadMetadata",
                                 "type": "DatasetReference",
                                 "parameters": {}
+                            }
+                        }
+                    },
+                    {
+                        "name": "SP-FinishLog",
+                        "description": "Initiate the end of the Pipeline",
+                        "type": "SqlServerStoredProcedure",
+                        "dependsOn": [
+                            {
+                                "activity": "IF-LastExtractionUpdate",
+                                "dependencyConditions": [
+                                    "Succeeded"
+                                ]
+                            }
+                        ],
+                        "policy": {
+                            "timeout": "7.00:00:00",
+                            "retry": 0,
+                            "retryIntervalInSeconds": 30,
+                            "secureOutput": false
+                        },
+                        "userProperties": [],
+                        "typeProperties": {
+                            "storedProcedureName": "UTIL.spPipelineExecutionFinish",
+                            "storedProcedureParameters": {
+                                "RunID": {
+                                    "value": {
+                                        "value": "@pipeline().RunId",
+                                        "type": "Expression"
+                                    },
+                                    "type": "Guid"
+                                }
+                            }
+                        },
+                        "linkedServiceName": {
+                            "referenceName": "LinkedServiceTargetDatabase",
+                            "type": "LinkedServiceReference"
+                        }
+                    },
+                    {
+                        "name": "IF-CopyData",
+                        "description": "Copy data from Source to Sink if the Extraction Flag is true",
+                        "type": "IfCondition",
+                        "dependsOn": [
+                            {
+                                "activity": "IF-SourceSQL",
+                                "dependencyConditions": [
+                                    "Succeeded"
+                                ]
+                            }
+                        ],
+                        "userProperties": [],
+                        "typeProperties": {
+                            "expression": {
+                                "value": "@{activity('LU-Metadata').output.firstRow.ExtractionFlag}",
+                                "type": "Expression"
                             },
-                            "firstRowOnly": false
+                            "ifTrueActivities": [
+                                {
+                                    "name": "COPY-SourceToStage",
+                                    "type": "Copy",
+                                    "dependsOn": [],
+                                    "policy": {
+                                        "timeout": "7.00:00:00",
+                                        "retry": 0,
+                                        "retryIntervalInSeconds": 30,
+                                        "secureOutput": false
+                                    },
+                                    "userProperties": [],
+                                    "typeProperties": {
+                                        "source": {
+                                            "type": "SqlSource",
+                                            "sqlReaderQuery": {
+                                                "value": "@variables('SourceSQL')",
+                                                "type": "Expression"
+                                            }
+                                        },
+                                        "sink": {
+                                            "type": "SqlSink",
+                                            "writeBatchSize": 10000,
+                                            "preCopyScript": {
+                                                "value": "TRUNCATE TABLE @{activity('LU-Metadata').output.firstRow.TargetObject}",
+                                                "type": "Expression"
+                                            }
+                                        },
+                                        "enableStaging": false,
+                                        "dataIntegrationUnits": 0
+                                    },
+                                    "inputs": [
+                                        {
+                                            "referenceName": "DSDBSourceAzureGeneral",
+                                            "type": "DatasetReference",
+                                            "parameters": {
+                                                "DBName": {
+                                                    "value": "@activity('LU-Metadata').output.firstRow.SourceDatabase",
+                                                    "type": "Expression"
+                                                }
+                                            }
+                                        }
+                                    ],
+                                    "outputs": [
+                                        {
+                                            "referenceName": "DSDBSinkGeneral",
+                                            "type": "DatasetReference",
+                                            "parameters": {
+                                                "SinkTableName": {
+                                                    "value": "@{activity('LU-Metadata').output.firstRow.TargetObject}",
+                                                    "type": "Expression"
+                                                }
+                                            }
+                                        }
+                                    ]
+                                }
+                            ]
+                        }
+                    },
+                    {
+                        "name": "IF-SPTransformData",
+                        "description": "Check if the Extraction Flag is true and a Stored Procedure name is specified for transformation post data load ",
+                        "type": "IfCondition",
+                        "dependsOn": [
+                            {
+                                "activity": "IF-CopyData",
+                                "dependencyConditions": [
+                                    "Succeeded"
+                                ]
+                            }
+                        ],
+                        "userProperties": [],
+                        "typeProperties": {
+                            "expression": {
+                                "value": "@{and(not(equals(activity('LU-Metadata').output.firstRow.TransformationSP, '')), activity('LU-Metadata').output.firstRow.ExtractionFlag)}",
+                                "type": "Expression"
+                            },
+                            "ifTrueActivities": [
+                                {
+                                    "name": "SP-Transform",
+                                    "type": "SqlServerStoredProcedure",
+                                    "dependsOn": [],
+                                    "policy": {
+                                        "timeout": "7.00:00:00",
+                                        "retry": 0,
+                                        "retryIntervalInSeconds": 30,
+                                        "secureOutput": false
+                                    },
+                                    "userProperties": [],
+                                    "typeProperties": {
+                                        "storedProcedureName": {
+                                            "value": "@{activity('LU-Metadata').output.firstRow.TransformationSP}",
+                                            "type": "Expression"
+                                        }
+                                    },
+                                    "linkedServiceName": {
+                                        "referenceName": "LinkedServiceTargetDatabase",
+                                        "type": "LinkedServiceReference"
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    {
+                        "name": "IF-LastExtractionUpdate",
+                        "description": "Update the metadata with LastExtraction Value",
+                        "type": "IfCondition",
+                        "dependsOn": [
+                            {
+                                "activity": "IF-SPTransformData",
+                                "dependencyConditions": [
+                                    "Succeeded"
+                                ]
+                            }
+                        ],
+                        "userProperties": [],
+                        "typeProperties": {
+                            "expression": {
+                                "value": "@{and(activity('LU-Metadata').output.firstRow.IncrementalLoadFlag, activity('LU-Metadata').output.firstRow.ExtractionFlag)}",
+                                "type": "Expression"
+                            },
+                            "ifTrueActivities": [
+                                {
+                                    "name": "SP-UpdateLastExtraction",
+                                    "type": "SqlServerStoredProcedure",
+                                    "dependsOn": [],
+                                    "policy": {
+                                        "timeout": "7.00:00:00",
+                                        "retry": 0,
+                                        "retryIntervalInSeconds": 30,
+                                        "secureOutput": false
+                                    },
+                                    "userProperties": [],
+                                    "typeProperties": {
+                                        "storedProcedureName": "[concat('[', 'UTIL].[spUpdateLastExtraction]')]",
+                                        "storedProcedureParameters": {
+                                            "LastExtractionCounter": {
+                                                "value": {
+                                                    "value": "@variables('LastExtractionCounter')",
+                                                    "type": "Expression"
+                                                },
+                                                "type": "Int64"
+                                            },
+                                            "LastExtractionTime": {
+                                                "value": {
+                                                    "value": "@variables('LastExtractionTime')",
+                                                    "type": "Expression"
+                                                },
+                                                "type": "DateTime"
+                                            },
+                                            "RecordID": {
+                                                "value": {
+                                                    "value": "@{activity('LU-Metadata').output.firstRow.RecordID}",
+                                                    "type": "Expression"
+                                                },
+                                                "type": "Guid"
+                                            }
+                                        }
+                                    },
+                                    "linkedServiceName": {
+                                        "referenceName": "LinkedServiceTargetDatabase",
+                                        "type": "LinkedServiceReference"
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    {
+                        "name": "IF-SourceSQL",
+                        "description": "Update the Source SQL in the variable. If Incremental Load then update the Last Extraction Value in the SQL",
+                        "type": "IfCondition",
+                        "dependsOn": [
+                            {
+                                "activity": "IF-IncrementalLoad",
+                                "dependencyConditions": [
+                                    "Succeeded"
+                                ]
+                            }
+                        ],
+                        "userProperties": [],
+                        "typeProperties": {
+                            "expression": {
+                                "value": "@{and(activity('LU-Metadata').output.firstRow.IncrementalLoadFlag, activity('LU-Metadata').output.firstRow.ExtractionFlag)}",
+                                "type": "Expression"
+                            },
+                            "ifFalseActivities": [
+                                {
+                                    "name": "SET-SourceSQL-Full",
+                                    "type": "SetVariable",
+                                    "dependsOn": [],
+                                    "userProperties": [],
+                                    "typeProperties": {
+                                        "variableName": "SourceSQL",
+                                        "value": {
+                                            "value": "@activity('LU-Metadata').output.firstRow.SourceSQL",
+                                            "type": "Expression"
+                                        }
+                                    }
+                                }
+                            ],
+                            "ifTrueActivities": [
+                                {
+                                    "name": "SET-LastExtractionVal",
+                                    "description": "Set the Incremental Load Value to be used in Source SQL later",
+                                    "type": "SetVariable",
+                                    "dependsOn": [],
+                                    "userProperties": [],
+                                    "typeProperties": {
+                                        "variableName": "IncrementalLoadValue",
+                                        "value": {
+                                            "value": "@{if(equals(activity('LU-Metadata').output.firstRow.IncrementalLoadColumnType, 'DATE'), concat('''', activity('LU-Metadata').output.firstRow.LastExtractionTime, ''''), activity('LU-Metadata').output.firstRow.LastExtractionCounter)}",
+                                            "type": "Expression"
+                                        }
+                                    }
+                                },
+                                {
+                                    "name": "SET-SourceSQL-Incremental",
+                                    "description": "Update the Source SQL with the Incremental Load value",
+                                    "type": "SetVariable",
+                                    "dependsOn": [
+                                        {
+                                            "activity": "SET-LastExtractionVal",
+                                            "dependencyConditions": [
+                                                "Succeeded"
+                                            ]
+                                        }
+                                    ],
+                                    "userProperties": [],
+                                    "typeProperties": {
+                                        "variableName": "SourceSQL",
+                                        "value": {
+                                            "value": "@replace(activity('LU-Metadata').output.firstRow.SourceSQL, '{LASTEXTRACTION}', variables('IncrementalLoadValue'))",
+                                            "type": "Expression"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    {
+                        "name": "IF-IncrementalLoad",
+                        "description": "If the current object is Incremental Load, then get the current timestamp and counter from the Source Database",
+                        "type": "IfCondition",
+                        "dependsOn": [
+                            {
+                                "activity": "LU-Metadata",
+                                "dependencyConditions": [
+                                    "Succeeded"
+                                ]
+                            }
+                        ],
+                        "userProperties": [],
+                        "typeProperties": {
+                            "expression": {
+                                "value": "@{and(activity('LU-Metadata').output.firstRow.IncrementalLoadFlag, activity('LU-Metadata').output.firstRow.ExtractionFlag)}",
+                                "type": "Expression"
+                            },
+                            "ifFalseActivities": [
+                                {
+                                    "name": "SET-LastExtractionCounter-Default",
+                                    "type": "SetVariable",
+                                    "dependsOn": [],
+                                    "userProperties": [],
+                                    "typeProperties": {
+                                        "variableName": "LastExtractionCounter",
+                                        "value": "0"
+                                    }
+                                },
+                                {
+                                    "name": "SET-LastExtractionTime-Default",
+                                    "type": "SetVariable",
+                                    "dependsOn": [],
+                                    "userProperties": [],
+                                    "typeProperties": {
+                                        "variableName": "LastExtractionTime",
+                                        "value": {
+                                            "value": "@utcnow()",
+                                            "type": "Expression"
+                                        }
+                                    }
+                                }
+                            ],
+                            "ifTrueActivities": [
+                                {
+                                    "name": "LU-GetCurrentExtractionVal",
+                                    "description": "Get the Last Extraction Values from the Source Database",
+                                    "type": "Lookup",
+                                    "dependsOn": [],
+                                    "policy": {
+                                        "timeout": "7.00:00:00",
+                                        "retry": 0,
+                                        "retryIntervalInSeconds": 30,
+                                        "secureOutput": false,
+                                        "secureInput": false
+                                    },
+                                    "userProperties": [],
+                                    "typeProperties": {
+                                        "source": {
+                                            "type": "SqlSource",
+                                            "sqlReaderQuery": "SELECT GETDATE() AS LastDateTime, CONVERT(VARCHAR, CONVERT(bigint, @@DBTS)) AS LastTSCounter"
+                                        },
+                                        "dataset": {
+                                            "referenceName": "DSDBSourceAzureGeneral",
+                                            "type": "DatasetReference",
+                                            "parameters": {
+                                                "DBName": {
+                                                    "value": "@activity('LU-Metadata').output.firstRow.SourceDatabase\n",
+                                                    "type": "Expression"
+                                                }
+                                            }
+                                        }
+                                    }
+                                },
+                                {
+                                    "name": "SET-LastExtractionCounter",
+                                    "description": "Set the value for Last Extraction Counter. If Timestamp or actual column.",
+                                    "type": "SetVariable",
+                                    "dependsOn": [
+                                        {
+                                            "activity": "LU-GetCurrentExtractionVal",
+                                            "dependencyConditions": [
+                                                "Succeeded"
+                                            ]
+                                        }
+                                    ],
+                                    "userProperties": [],
+                                    "typeProperties": {
+                                        "variableName": "LastExtractionCounter",
+                                        "value": {
+                                            "value": "@activity('LU-GetCurrentExtractionVal').output.firstRow.LastTSCounter",
+                                            "type": "Expression"
+                                        }
+                                    }
+                                },
+                                {
+                                    "name": "SET-LastExtractionTime",
+                                    "type": "SetVariable",
+                                    "dependsOn": [
+                                        {
+                                            "activity": "LU-GetCurrentExtractionVal",
+                                            "dependencyConditions": [
+                                                "Succeeded"
+                                            ]
+                                        }
+                                    ],
+                                    "userProperties": [],
+                                    "typeProperties": {
+                                        "variableName": "LastExtractionTime",
+                                        "value": {
+                                            "value": "@activity('LU-GetCurrentExtractionVal').output.firstRow.LastDateTime",
+                                            "type": "Expression"
+                                        }
+                                    }
+                                }
+                            ]
                         }
                     }
                 ],
                 "parameters": {
                     "SourceSystem": {
                         "type": "String",
-                        "defaultValue": "Src-OnPrem"
+                        "defaultValue": "Src-Azure"
+                    },
+                    "SourceSchema": {
+                        "type": "String",
+                        "defaultValue": "Application"
+                    },
+                    "SourceTable": {
+                        "type": "String",
+                        "defaultValue": "Cities"
+                    }
+                },
+                "variables": {
+                    "SourceSQL": {
+                        "type": "String"
+                    },
+                    "IncrementalLoadValue": {
+                        "type": "String"
+                    },
+                    "LastExtractionCounter": {
+                        "type": "String"
+                    },
+                    "LastExtractionTime": {
+                        "type": "String"
                     }
                 },
                 "folder": {
-                    "name": "Executor"
+                    "name": "Framework"
                 },
                 "annotations": []
             },
             "dependsOn": [
+                "[concat(variables('factoryId'), '/linkedServices/LinkedServiceTargetDatabase')]",
                 "[concat(variables('factoryId'), '/datasets/DSDataLoadMetadata')]",
-                "[concat(variables('factoryId'), '/pipelines/PL-Framework-FromOnPrem-ToDataLake')]"
+                "[concat(variables('factoryId'), '/datasets/DSDBSourceAzureGeneral')]",
+                "[concat(variables('factoryId'), '/datasets/DSDBSinkGeneral')]"
             ]
         },
         {
@@ -2969,6 +2867,107 @@
             "dependsOn": [
                 "[concat(variables('factoryId'), '/datasets/DSDataLoadMetadata')]",
                 "[concat(variables('factoryId'), '/pipelines/PL-Framework-FromFile-ToAzure')]"
+            ]
+        },
+        {
+            "name": "[concat(parameters('factoryName'), '/PL-Executor-OnPrem-Azure')]",
+            "type": "Microsoft.DataFactory/factories/pipelines",
+            "apiVersion": "2018-06-01",
+            "properties": {
+                "activities": [
+                    {
+                        "name": "Loop-Tables",
+                        "type": "ForEach",
+                        "dependsOn": [
+                            {
+                                "activity": "LU-GetTableList",
+                                "dependencyConditions": [
+                                    "Succeeded"
+                                ]
+                            }
+                        ],
+                        "userProperties": [],
+                        "typeProperties": {
+                            "items": {
+                                "value": "@activity('LU-GetTableList').output.value",
+                                "type": "Expression"
+                            },
+                            "isSequential": true,
+                            "activities": [
+                                {
+                                    "name": "EP-Framework",
+                                    "type": "ExecutePipeline",
+                                    "dependsOn": [],
+                                    "userProperties": [],
+                                    "typeProperties": {
+                                        "pipeline": {
+                                            "referenceName": "PL-Framework-FromOnPrem-ToAzure",
+                                            "type": "PipelineReference"
+                                        },
+                                        "waitOnCompletion": false,
+                                        "parameters": {
+                                            "SourceSystem": {
+                                                "value": "@item().SourceSystem",
+                                                "type": "Expression"
+                                            },
+                                            "SourceSchema": {
+                                                "value": "@item().SourceSchema",
+                                                "type": "Expression"
+                                            },
+                                            "SourceTable": {
+                                                "value": "@item().SourceTable",
+                                                "type": "Expression"
+                                            }
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    {
+                        "name": "LU-GetTableList",
+                        "description": "Get the list of tables to load from the Metadata table",
+                        "type": "Lookup",
+                        "dependsOn": [],
+                        "policy": {
+                            "timeout": "7.00:00:00",
+                            "retry": 0,
+                            "retryIntervalInSeconds": 30,
+                            "secureOutput": false,
+                            "secureInput": false
+                        },
+                        "userProperties": [],
+                        "typeProperties": {
+                            "source": {
+                                "type": "SqlSource",
+                                "sqlReaderQuery": {
+                                    "value": "SELECT * FROM UTIL.[vDataLoadMetaData_FromTable_ToTable] WHERE SourceSystem = '@{pipeline().parameters.SourceSystem}'\n",
+                                    "type": "Expression"
+                                }
+                            },
+                            "dataset": {
+                                "referenceName": "DSDataLoadMetadata",
+                                "type": "DatasetReference",
+                                "parameters": {}
+                            },
+                            "firstRowOnly": false
+                        }
+                    }
+                ],
+                "parameters": {
+                    "SourceSystem": {
+                        "type": "String",
+                        "defaultValue": "Src-OnPrem"
+                    }
+                },
+                "folder": {
+                    "name": "Executor"
+                },
+                "annotations": []
+            },
+            "dependsOn": [
+                "[concat(variables('factoryId'), '/datasets/DSDataLoadMetadata')]",
+                "[concat(variables('factoryId'), '/pipelines/PL-Framework-FromOnPrem-ToAzure')]"
             ]
         },
         {
@@ -3345,7 +3344,7 @@
             ]
         },
         {
-            "name": "[concat(parameters('factoryName'), '/PL-Executor-OnPrem-Azure')]",
+            "name": "[concat(parameters('factoryName'), '/PL-Executor-OnPrem-DataLake')]",
             "type": "Microsoft.DataFactory/factories/pipelines",
             "apiVersion": "2018-06-01",
             "properties": {
@@ -3367,7 +3366,8 @@
                                 "value": "@activity('LU-GetTableList').output.value",
                                 "type": "Expression"
                             },
-                            "isSequential": true,
+                            "isSequential": false,
+                            "batchCount": 4,
                             "activities": [
                                 {
                                     "name": "EP-Framework",
@@ -3376,7 +3376,7 @@
                                     "userProperties": [],
                                     "typeProperties": {
                                         "pipeline": {
-                                            "referenceName": "PL-Framework-FromOnPrem-ToAzure",
+                                            "referenceName": "PL-Framework-FromOnPrem-ToDataLake",
                                             "type": "PipelineReference"
                                         },
                                         "waitOnCompletion": false,
@@ -3416,7 +3416,7 @@
                             "source": {
                                 "type": "SqlSource",
                                 "sqlReaderQuery": {
-                                    "value": "SELECT * FROM UTIL.[vDataLoadMetaData_FromTable_ToTable] WHERE SourceSystem = '@{pipeline().parameters.SourceSystem}'\n",
+                                    "value": "SELECT * FROM UTIL.vDataLoadMetaData_FromTable_ToFile WHERE SourceSystem = '@{pipeline().parameters.SourceSystem}' AND TargetSystem = 'ADLS'",
                                     "type": "Expression"
                                 }
                             },
@@ -3442,7 +3442,7 @@
             },
             "dependsOn": [
                 "[concat(variables('factoryId'), '/datasets/DSDataLoadMetadata')]",
-                "[concat(variables('factoryId'), '/pipelines/PL-Framework-FromOnPrem-ToAzure')]"
+                "[concat(variables('factoryId'), '/pipelines/PL-Framework-FromOnPrem-ToDataLake')]"
             ]
         },
         {
@@ -3518,7 +3518,7 @@
                             },
                             "waitOnCompletion": true,
                             "parameters": {
-                                "SourceSystem": "PRG_DEV"
+                                "SourceSystem": "Src-OnPrem"
                             }
                         }
                     },
@@ -3541,7 +3541,7 @@
                             },
                             "waitOnCompletion": true,
                             "parameters": {
-                                "SourceSystem": "WideWorldImporters-Standard"
+                                "SourceSystem": "Src-Azure"
                             }
                         }
                     },
@@ -3623,7 +3623,7 @@
                             },
                             "waitOnCompletion": true,
                             "parameters": {
-                                "SourceSystem": "Local"
+                                "SourceSystem": "Az-FileStorage"
                             }
                         }
                     },
@@ -3644,7 +3644,9 @@
                                 "referenceName": "PL-Executor-Azure-DataLake",
                                 "type": "PipelineReference"
                             },
-                            "parameters": {}
+                            "parameters": {
+                                "SourceSystem": "Src-Azure"
+                            }
                         }
                     },
                     {
@@ -3664,7 +3666,9 @@
                                 "referenceName": "PL-Executor-OnPrem-DataLake",
                                 "type": "PipelineReference"
                             },
-                            "parameters": {}
+                            "parameters": {
+                                "SourceSystem": "Src-OnPrem"
+                            }
                         }
                     }
                 ],
@@ -3680,84 +3684,49 @@
             ]
         },
         {
-            "name": "[concat(parameters('factoryName'), '/DSTextFileGeneral')]",
-            "type": "Microsoft.DataFactory/factories/datasets",
+            "name": "[concat(parameters('factoryName'), '/LinkedServiceTargetDatabase')]",
+            "type": "Microsoft.DataFactory/factories/linkedServices",
             "apiVersion": "2018-06-01",
             "properties": {
-                "linkedServiceName": {
-                    "referenceName": "LinkedServiceAzureFileStorage",
-                    "type": "LinkedServiceReference"
-                },
-                "parameters": {
-                    "columnDelimiter": {
-                        "type": "String"
-                    },
-                    "rowDelimiter": {
-                        "type": "String"
-                    },
-                    "firstRowAsHeader": {
-                        "type": "Bool"
-                    },
-                    "folderPath": {
-                        "type": "String"
-                    },
-                    "fileName": {
-                        "type": "String"
-                    }
-                },
                 "annotations": [],
-                "type": "FileShare",
+                "type": "AzureSqlDatabase",
                 "typeProperties": {
-                    "format": {
-                        "type": "TextFormat",
-                        "columnDelimiter": {
-                            "value": "@dataset().columnDelimiter",
-                            "type": "Expression"
+                    "connectionString": {
+                        "type": "AzureKeyVaultSecret",
+                        "store": {
+                            "referenceName": "LinkedServiceAzureKeyVault",
+                            "type": "LinkedServiceReference"
                         },
-                        "nullValue": "\\N",
-                        "treatEmptyAsNull": true,
-                        "firstRowAsHeader": {
-                            "value": "@dataset().firstRowAsHeader",
-                            "type": "Expression"
-                        }
-                    },
-                    "fileName": {
-                        "value": "[parameters('DSTextFileGeneral_properties_typeProperties_fileName')]",
-                        "type": "Expression"
-                    },
-                    "folderPath": {
-                        "value": "[parameters('DSTextFileGeneral_properties_typeProperties_folderPath')]",
-                        "type": "Expression"
+                        "secretName": "[parameters('LinkedServiceTargetDatabase_properties_typeProperties_connectionString_secretName')]"
                     }
                 }
             },
             "dependsOn": [
-                "[concat(variables('factoryId'), '/linkedServices/LinkedServiceAzureFileStorage')]"
+                "[concat(variables('factoryId'), '/linkedServices/LinkedServiceAzureKeyVault')]"
             ]
         },
         {
-            "name": "[concat(parameters('factoryName'), '/DSDBSourceOnPremGeneral')]",
+            "name": "[concat(parameters('factoryName'), '/DSDBSourceAzureGeneral')]",
             "type": "Microsoft.DataFactory/factories/datasets",
             "apiVersion": "2018-06-01",
             "properties": {
                 "linkedServiceName": {
-                    "referenceName": "LinkedServiceSourceOnPremDatabase",
+                    "referenceName": "LinkedServiceSourceAzureDatabase",
                     "type": "LinkedServiceReference"
                 },
                 "parameters": {
                     "DBName": {
-                        "type": "String",
-                        "defaultValue": "PRG_DEV"
+                        "type": "String"
                     }
                 },
                 "annotations": [],
-                "type": "SqlServerTable",
+                "type": "AzureSqlTable",
                 "typeProperties": {
-                    "tableName": "dummyName"
+                    "tableName": "dummy"
                 }
             },
             "dependsOn": [
-                "[concat(variables('factoryId'), '/linkedServices/LinkedServiceSourceOnPremDatabase')]"
+                "[concat(variables('factoryId'), '/linkedServices/LinkedServiceSourceAzureDatabase')]"
             ]
         },
         {
@@ -3819,27 +3788,103 @@
             ]
         },
         {
-            "name": "[concat(parameters('factoryName'), '/DSDBSourceAzureGeneral')]",
+            "name": "[concat(parameters('factoryName'), '/DSDBSourceOnPremGeneral')]",
             "type": "Microsoft.DataFactory/factories/datasets",
             "apiVersion": "2018-06-01",
             "properties": {
                 "linkedServiceName": {
-                    "referenceName": "LinkedServiceSourceAzureDatabase",
+                    "referenceName": "LinkedServiceSourceOnPremDatabase",
                     "type": "LinkedServiceReference"
                 },
                 "parameters": {
                     "DBName": {
-                        "type": "String"
+                        "type": "String",
+                        "defaultValue": "PRG_DEV"
                     }
+                },
+                "annotations": [],
+                "type": "SqlServerTable",
+                "typeProperties": {
+                    "tableName": "dummyName"
+                }
+            },
+            "dependsOn": [
+                "[concat(variables('factoryId'), '/linkedServices/LinkedServiceSourceOnPremDatabase')]"
+            ]
+        },
+        {
+            "name": "[concat(parameters('factoryName'), '/DSDataLoadMetadata')]",
+            "type": "Microsoft.DataFactory/factories/datasets",
+            "apiVersion": "2018-06-01",
+            "properties": {
+                "linkedServiceName": {
+                    "referenceName": "LinkedServiceTargetDatabase",
+                    "type": "LinkedServiceReference"
                 },
                 "annotations": [],
                 "type": "AzureSqlTable",
                 "typeProperties": {
-                    "tableName": "dummy"
+                    "tableName": "[concat('[', 'UTIL].[DataLoadMetadata]')]"
                 }
             },
             "dependsOn": [
-                "[concat(variables('factoryId'), '/linkedServices/LinkedServiceSourceAzureDatabase')]"
+                "[concat(variables('factoryId'), '/linkedServices/LinkedServiceTargetDatabase')]"
+            ]
+        },
+        {
+            "name": "[concat(parameters('factoryName'), '/DSTextFileGeneral')]",
+            "type": "Microsoft.DataFactory/factories/datasets",
+            "apiVersion": "2018-06-01",
+            "properties": {
+                "linkedServiceName": {
+                    "referenceName": "LinkedServiceAzureFileStorage",
+                    "type": "LinkedServiceReference"
+                },
+                "parameters": {
+                    "columnDelimiter": {
+                        "type": "String"
+                    },
+                    "rowDelimiter": {
+                        "type": "String"
+                    },
+                    "firstRowAsHeader": {
+                        "type": "Bool"
+                    },
+                    "folderPath": {
+                        "type": "String"
+                    },
+                    "fileName": {
+                        "type": "String"
+                    }
+                },
+                "annotations": [],
+                "type": "FileShare",
+                "typeProperties": {
+                    "format": {
+                        "type": "TextFormat",
+                        "columnDelimiter": {
+                            "value": "@dataset().columnDelimiter",
+                            "type": "Expression"
+                        },
+                        "nullValue": "\\N",
+                        "treatEmptyAsNull": true,
+                        "firstRowAsHeader": {
+                            "value": "@dataset().firstRowAsHeader",
+                            "type": "Expression"
+                        }
+                    },
+                    "fileName": {
+                        "value": "[parameters('DSTextFileGeneral_properties_typeProperties_fileName')]",
+                        "type": "Expression"
+                    },
+                    "folderPath": {
+                        "value": "[parameters('DSTextFileGeneral_properties_typeProperties_folderPath')]",
+                        "type": "Expression"
+                    }
+                }
+            },
+            "dependsOn": [
+                "[concat(variables('factoryId'), '/linkedServices/LinkedServiceAzureFileStorage')]"
             ]
         },
         {
@@ -3868,50 +3913,6 @@
             "dependsOn": [
                 "[concat(variables('factoryId'), '/linkedServices/LinkedServiceTargetDatabase')]"
             ]
-        },
-        {
-            "name": "[concat(parameters('factoryName'), '/DSDataLoadMetadata')]",
-            "type": "Microsoft.DataFactory/factories/datasets",
-            "apiVersion": "2018-06-01",
-            "properties": {
-                "linkedServiceName": {
-                    "referenceName": "LinkedServiceTargetDatabase",
-                    "type": "LinkedServiceReference"
-                },
-                "annotations": [],
-                "type": "AzureSqlTable",
-                "typeProperties": {
-                    "tableName": "[concat('[', 'UTIL].[DataLoadMetadata]')]"
-                }
-            },
-            "dependsOn": [
-                "[concat(variables('factoryId'), '/linkedServices/LinkedServiceTargetDatabase')]"
-            ]
-        },
-        {
-            "name": "[concat(parameters('factoryName'), '/IntegrationRuntime-Region')]",
-            "type": "Microsoft.DataFactory/factories/integrationRuntimes",
-            "apiVersion": "2018-06-01",
-            "properties": {
-                "type": "Managed",
-                "description": "Integration Runtime created in the same region as File Storage",
-                "typeProperties": {
-                    "computeProperties": {
-                        "location": "Southeast Asia"
-                    }
-                }
-            },
-            "dependsOn": []
-        },
-        {
-            "name": "[concat(parameters('factoryName'), '/OnPremRuntime')]",
-            "type": "Microsoft.DataFactory/factories/integrationRuntimes",
-            "apiVersion": "2018-06-01",
-            "properties": {
-                "type": "SelfHosted",
-                "typeProperties": {}
-            },
-            "dependsOn": []
         },
         {
             "name": "[concat(parameters('factoryName'), '/LinkedServiceAzureKeyVault')]",
@@ -3949,87 +3950,6 @@
             ]
         },
         {
-            "name": "[concat(parameters('factoryName'), '/LinkedServiceDataBricks')]",
-            "type": "Microsoft.DataFactory/factories/linkedServices",
-            "apiVersion": "2018-06-01",
-            "properties": {
-                "annotations": [],
-                "type": "AzureDatabricks",
-                "typeProperties": {
-                    "domain": "https://australiaeast.azuredatabricks.net",
-                    "accessToken": {
-                        "type": "AzureKeyVaultSecret",
-                        "store": {
-                            "referenceName": "LinkedServiceAzureKeyVault",
-                            "type": "LinkedServiceReference"
-                        },
-                        "secretName": "databricks-token"
-                    },
-                    "existingClusterId": "0425-084028-fit382"
-                }
-            },
-            "dependsOn": [
-                "[concat(variables('factoryId'), '/linkedServices/LinkedServiceAzureKeyVault')]"
-            ]
-        },
-        {
-            "name": "[concat(parameters('factoryName'), '/LinkedServiceAzureFileStorage')]",
-            "type": "Microsoft.DataFactory/factories/linkedServices",
-            "apiVersion": "2018-06-01",
-            "properties": {
-                "description": "Connection for File Storage",
-                "annotations": [],
-                "type": "FileServer",
-                "typeProperties": {
-                    "host": "\\\\vlrx1storage.file.core.windows.net\\fshare",
-                    "userId": "[parameters('LinkedServiceAzureFileStorage_properties_typeProperties_userId')]",
-                    "password": {
-                        "type": "AzureKeyVaultSecret",
-                        "store": {
-                            "referenceName": "LinkedServiceAzureKeyVault",
-                            "type": "LinkedServiceReference"
-                        },
-                        "secretName": "blob-storage-key"
-                    }
-                },
-                "connectVia": {
-                    "referenceName": "IntegrationRuntime-Region",
-                    "type": "IntegrationRuntimeReference"
-                }
-            },
-            "dependsOn": [
-                "[concat(variables('factoryId'), '/integrationRuntimes/IntegrationRuntime-Region')]",
-                "[concat(variables('factoryId'), '/linkedServices/LinkedServiceAzureKeyVault')]"
-            ]
-        },
-        {
-            "name": "[concat(parameters('factoryName'), '/LinkedServiceSourceOnPremDatabase')]",
-            "type": "Microsoft.DataFactory/factories/linkedServices",
-            "apiVersion": "2018-06-01",
-            "properties": {
-                "annotations": [],
-                "type": "SqlServer",
-                "typeProperties": {
-                    "connectionString": {
-                        "type": "AzureKeyVaultSecret",
-                        "store": {
-                            "referenceName": "LinkedServiceAzureKeyVault",
-                            "type": "LinkedServiceReference"
-                        },
-                        "secretName": "[parameters('LinkedServiceSourceOnPremDatabase_properties_typeProperties_connectionString_secretName')]"
-                    }
-                },
-                "connectVia": {
-                    "referenceName": "OnPremRuntime",
-                    "type": "IntegrationRuntimeReference"
-                }
-            },
-            "dependsOn": [
-                "[concat(variables('factoryId'), '/integrationRuntimes/OnPremRuntime')]",
-                "[concat(variables('factoryId'), '/linkedServices/LinkedServiceAzureKeyVault')]"
-            ]
-        },
-        {
             "name": "[concat(parameters('factoryName'), '/LinkedServiceAzureFunction')]",
             "type": "Microsoft.DataFactory/factories/linkedServices",
             "apiVersion": "2018-06-01",
@@ -4037,7 +3957,7 @@
                 "annotations": [],
                 "type": "AzureFunction",
                 "typeProperties": {
-                    "functionAppUrl": "https://vlrx1fnapp.azurewebsites.net",
+                    "functionAppUrl": "https://vlrex1fnapp.azurewebsites.net",
                     "functionKey": {
                         "type": "AzureKeyVaultSecret",
                         "store": {
@@ -4045,6 +3965,28 @@
                             "type": "LinkedServiceReference"
                         },
                         "secretName": "azurefunction-fileservice-key"
+                    }
+                }
+            },
+            "dependsOn": [
+                "[concat(variables('factoryId'), '/linkedServices/LinkedServiceAzureKeyVault')]"
+            ]
+        },
+        {
+            "name": "[concat(parameters('factoryName'), '/LinkedServiceSourceAzureDatabase')]",
+            "type": "Microsoft.DataFactory/factories/linkedServices",
+            "apiVersion": "2018-06-01",
+            "properties": {
+                "annotations": [],
+                "type": "AzureSqlDatabase",
+                "typeProperties": {
+                    "connectionString": {
+                        "type": "AzureKeyVaultSecret",
+                        "store": {
+                            "referenceName": "LinkedServiceAzureKeyVault",
+                            "type": "LinkedServiceReference"
+                        },
+                        "secretName": "[parameters('LinkedServiceSourceAzureDatabase_properties_typeProperties_connectionString_secretName')]"
                     }
                 }
             },
@@ -4076,12 +4018,37 @@
             ]
         },
         {
-            "name": "[concat(parameters('factoryName'), '/LinkedServiceSourceAzureDatabase')]",
+            "name": "[concat(parameters('factoryName'), '/IntegrationRuntime-Region')]",
+            "type": "Microsoft.DataFactory/factories/integrationRuntimes",
+            "apiVersion": "2018-06-01",
+            "properties": {
+                "type": "Managed",
+                "description": "Integration Runtime created in the same region as File Storage",
+                "typeProperties": {
+                    "computeProperties": {
+                        "location": "Southeast Asia"
+                    }
+                }
+            },
+            "dependsOn": []
+        },
+        {
+            "name": "[concat(parameters('factoryName'), '/OnPremRuntime')]",
+            "type": "Microsoft.DataFactory/factories/integrationRuntimes",
+            "apiVersion": "2018-06-01",
+            "properties": {
+                "type": "SelfHosted",
+                "typeProperties": {}
+            },
+            "dependsOn": []
+        },
+        {
+            "name": "[concat(parameters('factoryName'), '/LinkedServiceSourceOnPremDatabase')]",
             "type": "Microsoft.DataFactory/factories/linkedServices",
             "apiVersion": "2018-06-01",
             "properties": {
                 "annotations": [],
-                "type": "AzureSqlDatabase",
+                "type": "SqlServer",
                 "typeProperties": {
                     "connectionString": {
                         "type": "AzureKeyVaultSecret",
@@ -4089,30 +4056,67 @@
                             "referenceName": "LinkedServiceAzureKeyVault",
                             "type": "LinkedServiceReference"
                         },
-                        "secretName": "[parameters('LinkedServiceSourceAzureDatabase_properties_typeProperties_connectionString_secretName')]"
+                        "secretName": "[parameters('LinkedServiceSourceOnPremDatabase_properties_typeProperties_connectionString_secretName')]"
                     }
+                },
+                "connectVia": {
+                    "referenceName": "OnPremRuntime",
+                    "type": "IntegrationRuntimeReference"
                 }
             },
             "dependsOn": [
+                "[concat(variables('factoryId'), '/integrationRuntimes/OnPremRuntime')]",
                 "[concat(variables('factoryId'), '/linkedServices/LinkedServiceAzureKeyVault')]"
             ]
         },
         {
-            "name": "[concat(parameters('factoryName'), '/LinkedServiceTargetDatabase')]",
+            "name": "[concat(parameters('factoryName'), '/LinkedServiceAzureFileStorage')]",
             "type": "Microsoft.DataFactory/factories/linkedServices",
             "apiVersion": "2018-06-01",
             "properties": {
+                "description": "Connection for File Storage",
                 "annotations": [],
-                "type": "AzureSqlDatabase",
+                "type": "FileServer",
                 "typeProperties": {
-                    "connectionString": {
+                    "host": "\\\\vlrex1storage.file.core.windows.net\\fshare",
+                    "userId": "[parameters('LinkedServiceAzureFileStorage_properties_typeProperties_userId')]",
+                    "password": {
                         "type": "AzureKeyVaultSecret",
                         "store": {
                             "referenceName": "LinkedServiceAzureKeyVault",
                             "type": "LinkedServiceReference"
                         },
-                        "secretName": "[parameters('LinkedServiceTargetDatabase_properties_typeProperties_connectionString_secretName')]"
+                        "secretName": "blob-storage-key"
                     }
+                },
+                "connectVia": {
+                    "referenceName": "IntegrationRuntime-Region",
+                    "type": "IntegrationRuntimeReference"
+                }
+            },
+            "dependsOn": [
+                "[concat(variables('factoryId'), '/integrationRuntimes/IntegrationRuntime-Region')]",
+                "[concat(variables('factoryId'), '/linkedServices/LinkedServiceAzureKeyVault')]"
+            ]
+        },
+        {
+            "name": "[concat(parameters('factoryName'), '/LinkedServiceDataBricks')]",
+            "type": "Microsoft.DataFactory/factories/linkedServices",
+            "apiVersion": "2018-06-01",
+            "properties": {
+                "annotations": [],
+                "type": "AzureDatabricks",
+                "typeProperties": {
+                    "domain": "https://australiaeast.azuredatabricks.net",
+                    "accessToken": {
+                        "type": "AzureKeyVaultSecret",
+                        "store": {
+                            "referenceName": "LinkedServiceAzureKeyVault",
+                            "type": "LinkedServiceReference"
+                        },
+                        "secretName": "databricks-token"
+                    },
+                    "existingClusterId": "0508-062720-churl317"
                 }
             },
             "dependsOn": [
