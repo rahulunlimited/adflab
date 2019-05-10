@@ -5,10 +5,10 @@ GO
 DROP PROCEDURE IF EXISTS [dbo].[spLoad_Country]
 GO
 IF  EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N'[dbo].[StateProvince]') AND type in (N'U'))
-ALTER TABLE [dbo].[StateProvince] DROP CONSTRAINT IF EXISTS [DF__StateProv__Valid__47A6A41B]
+ALTER TABLE [dbo].[StateProvince] DROP CONSTRAINT IF EXISTS [DF__StateProv__Valid__1D7B6025]
 GO
 IF  EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N'[dbo].[Country]') AND type in (N'U'))
-ALTER TABLE [dbo].[Country] DROP CONSTRAINT IF EXISTS [DF__Country__Valid__43D61337]
+ALTER TABLE [dbo].[Country] DROP CONSTRAINT IF EXISTS [DF__Country__Valid__19AACF41]
 GO
 DROP TABLE IF EXISTS [STG].[Sales_Invoices]
 GO
@@ -49,6 +49,7 @@ GO
 SET QUOTED_IDENTIFIER ON
 GO
 CREATE TABLE [dbo].[CountryHistory](
+	[CountryKey] [int] NOT NULL,
 	[CountryID] [int] NOT NULL,
 	[CountryCode] [nvarchar](3) NOT NULL,
 	[IsoNumericCode] [int] NOT NULL,
@@ -67,7 +68,8 @@ GO
 SET QUOTED_IDENTIFIER ON
 GO
 CREATE TABLE [dbo].[Country](
-	[CountryID] [int] IDENTITY(1,1) NOT NULL,
+	[CountryKey] [int] IDENTITY(1,1) NOT NULL,
+	[CountryID] [int] NOT NULL,
 	[CountryCode] [nvarchar](3) NOT NULL,
 	[IsoNumericCode] [int] NOT NULL,
 	[CountryName] [nvarchar](60) NOT NULL,
@@ -96,7 +98,7 @@ GO
 CREATE TABLE [dbo].[StateProvinceHistory](
 	[StateProvinceCode] [nvarchar](5) NOT NULL,
 	[StateProvinceName] [nvarchar](50) NOT NULL,
-	[CountryID] [int] NOT NULL,
+	[CountryKey] [int] NOT NULL,
 	[LatestRecordedPopulation] [bigint] NULL,
 	[SourceSystem] [nvarchar](60) NOT NULL,
 	[Valid] [bit] NOT NULL,
@@ -111,7 +113,7 @@ GO
 CREATE TABLE [dbo].[StateProvince](
 	[StateProvinceCode] [nvarchar](5) NOT NULL,
 	[StateProvinceName] [nvarchar](50) NOT NULL,
-	[CountryID] [int] NOT NULL,
+	[CountryKey] [int] NOT NULL,
 	[LatestRecordedPopulation] [bigint] NULL,
 	[SourceSystem] [nvarchar](60) NOT NULL,
 	[Valid] [bit] NOT NULL,
@@ -308,10 +310,11 @@ USING [STG].[Application_Countries] S
 ON (S.[IsoAlpha3Code] = T.[CountryCode])
 
 WHEN NOT MATCHED BY TARGET 
-THEN INSERT ([CountryCode], [IsoNumericCode], [CountryName], [FormalName], [LatestRecordedPopulation], [Continent], SourceSystem)
-	VALUES ([IsoAlpha3Code], [IsoNumericCode], [CountryName], [FormalName], [LatestRecordedPopulation], [Continent], 'Azure')
+THEN INSERT (CountryID, [CountryCode], [IsoNumericCode], [CountryName], [FormalName], [LatestRecordedPopulation], [Continent], SourceSystem)
+	VALUES (CountryID, [IsoAlpha3Code], [IsoNumericCode], [CountryName], [FormalName], [LatestRecordedPopulation], [Continent], 'Azure')
 WHEN MATCHED
 	AND T.[IsoNumericCode] <> S.[IsoNumericCode]
+		OR T.CountryID <> S.[CountryId]
 		OR T.[CountryName] <> S.[CountryName]
 		OR T.[FormalName] <> S.[FormalName]
 		OR T.[LatestRecordedPopulation] <> S.[LatestRecordedPopulation]
@@ -319,6 +322,7 @@ WHEN MATCHED
 		OR T.SourceSystem <> 'Azure'
 	THEN UPDATE 
 	SET	T.[IsoNumericCode] = S.[IsoNumericCode]
+		,T.CountryID = S.CountryID
 		,T.[CountryName] = S.[CountryName]
 		,T.[FormalName] = S.[FormalName]
 		,T.[LatestRecordedPopulation] = S.[LatestRecordedPopulation]
@@ -338,25 +342,26 @@ AS
 
 
 MERGE dbo.StateProvince AS T
-USING [STG].[Application_StateProvinces] S 
+USING (SELECT S.*, C.CountryKey FROM [STG].[Application_StateProvinces] S LEFT JOIN dbo.Country C ON S.CountryId = C.CountryID) S
 ON (S.StateProvinceCode = T.StateProvinceCode)
 
 WHEN NOT MATCHED BY TARGET 
-THEN INSERT (StateProvinceCode, [StateProvinceName], [CountryId], [LatestRecordedPopulation], SourceSystem)
-	VALUES (StateProvinceCode, [StateProvinceName], [CountryId], [LatestRecordedPopulation], 'Azure')
+THEN INSERT (StateProvinceCode, [StateProvinceName], [CountryKey], [LatestRecordedPopulation], SourceSystem, Valid)
+	VALUES (StateProvinceCode, [StateProvinceName], [CountryKey], [LatestRecordedPopulation], 'Azure', 1)
 WHEN MATCHED
 	AND T.[StateProvinceName] <> S.[StateProvinceName]
-		OR T.[CountryId] <> S.[CountryId]
+		OR T.[CountryKey] <> S.[CountryKey]
 		OR T.[LatestRecordedPopulation] <> S.[LatestRecordedPopulation]
 		OR T.SourceSystem <> 'Azure'
 	THEN UPDATE 
 	SET	T.[StateProvinceName] = S.[StateProvinceName]
-		,T.[CountryId] = S.[CountryId]
+		,T.[CountryKey] = S.[CountryKey]
 		,T.[LatestRecordedPopulation] = S.[LatestRecordedPopulation]
 		,T.SourceSystem = 'Azure'
-WHEN NOT MATCHED BY SOURCE
-	THEN UPDATE
-	SET T.Valid = 0
+		,T.Valid = 1
+--WHEN NOT MATCHED BY SOURCE
+--	THEN 
+--	UPDATE SET T.Valid = 0
  ;
 GO
 SET ANSI_NULLS ON
@@ -368,24 +373,22 @@ AS
 
 
 MERGE dbo.StateProvince AS T
-USING (SELECT S.*, C.CountryID FROM [STG].[CSV_AusState] S LEFT JOIN dbo.Country C ON S.Country = C.CountryName) S
+USING (SELECT S.*, C.CountryKey, 'External' AS SourceSystem FROM [STG].[CSV_AusState] S LEFT JOIN dbo.Country C ON S.Country = C.CountryName) S
 ON (S.StateCode = T.StateProvinceCode)
 
 WHEN NOT MATCHED BY TARGET 
-THEN INSERT (StateProvinceCode, [StateProvinceName], [CountryId], [LatestRecordedPopulation], SourceSystem)
-	VALUES (StateCode, [StateName], CountryId, [LastPopulation], 'External')
+THEN INSERT (StateProvinceCode, [StateProvinceName], CountryKey, [LatestRecordedPopulation], SourceSystem, Valid)
+	VALUES (StateCode, [StateName], CountryKey, [LastPopulation], SourceSystem, 1)
 WHEN MATCHED
-	AND T.[StateProvinceName] <> S.StateCode
-		OR T.[CountryId] <> S.[CountryId]
+	AND T.[StateProvinceName] <> S.[StateName]
+		OR T.CountryKey <> S.CountryKey
 		OR T.[LatestRecordedPopulation] <> S.[LastPopulation]
-		OR T.SourceSystem <> 'External'
+		OR T.SourceSystem <> S.SourceSystem
 	THEN UPDATE 
-	SET	T.[StateProvinceName] = S.StateCode
-		,T.[CountryId] = S.[CountryId]
+	SET	T.[StateProvinceName] = S.[StateName]
+		,T.CountryKey = S.CountryKey
 		,T.[LatestRecordedPopulation] = S.[LastPopulation]
-		,T.SourceSystem = 'External'
-WHEN NOT MATCHED BY SOURCE
-	THEN UPDATE
-	SET T.Valid = 0
+		,T.SourceSystem = S.SourceSystem
+		,T.Valid = 1
  ;
 GO
