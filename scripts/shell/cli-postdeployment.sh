@@ -4,6 +4,8 @@ SUBSCRIPTIONID="5f454d76-f1a1-4e10-ba09-e6cc9296f7e2"
 RESOURCEGROUP="RG-ADF"
 PROJECTPREFIX="vlr1"
 
+myusername='Rahul.Agrawal@velrada.com'
+
 ################### 02 - Assign Resource Variables
 #******PLEASE DO NOT UPDATE INFORMATION BELOW THIS SECTION****************
 keyVaultName="$PROJECTPREFIX"kv
@@ -15,6 +17,8 @@ adfName="$PROJECTPREFIX"adf
 sqlServerName="$PROJECTPREFIX"sql
 storageName="$PROJECTPREFIX"storage
 scope="/subscriptions/$SUBSCRIPTIONID/resourceGroups/$RESOURCEGROUP/providers/Microsoft.Storage/storageAccounts/$dataLakeName"
+
+uid=$(az ad user list --upn $myusername --query "[].objectId" -o tsv)
 
 #Set Key Access Policyy for User
 az keyvault set-policy --name $keyVaultName --upn "Rahul.Agrawal@velrada.com" --secret-permissions get list set
@@ -88,7 +92,21 @@ echo $fnAppId
 #Assign Access Policy
 az keyvault set-policy --name $keyVaultName --object-id $fnAppId --secret-permissions get
 
+#########################File Share
+#Get the connection-string for Storage Account
+storageConnStr=$(az keyvault secret show --name blob-connection-string --vault-name $keyVaultName --query value -o tsv)
+echo $storageConnStr
+#Create folder for source
+az storage directory create --name src -s fshare --connection-string $storageConnStr
+#Create folder for destination
+az storage directory create --name dest -s fshare --connection-string $storageConnStr
+#Copy a sample file to the source folder
+az storage file upload -s fshare --source ~/clouddrive/adflab/fileshare/AUS-State.csv --connection-string $storageConnStr -p src
+
+
 #########################Restore Database 
+#Add User as Server AD Admin
+az sql server ad-admin create --display-name $myusername --server $sqlServerName -g $RESOURCEGROUP -i $uid
 #Assign variable for Database
 sqlADFLabDB="adflab"
 sqlADFUser="veladmin"
@@ -105,17 +123,6 @@ az sql db import -s $sqlServerName -n $sqlADFLabDB -g $RESOURCEGROUP -p $pwdSQLA
 az sql db create -g $RESOURCEGROUP -s $sqlServerName -n $dbWideWorldImporters --service-objective S4
 #Restore the bacpac from Azure Storage
 az sql db import -s $sqlServerName -n $dbWideWorldImporters -g $RESOURCEGROUP -p $pwdSQLAdmin -u $sqlADFUser --storage-key $storageKey --storage-key-type StorageAccessKey --storage-uri https://vlrlearnstore.blob.core.windows.net/sqldb/WideWorldImporters-Standard.bacpac
-
-#########################File Share
-#Get the connection-string for Storage Account
-storageConnStr=$(az keyvault secret show --name blob-connection-string --vault-name $keyVaultName --query value -o tsv)
-echo $storageConnStr
-#Create folder for source
-az storage directory create --name src -s fshare --connection-string $storageConnStr
-#Create folder for destination
-az storage directory create --name dest -s fshare --connection-string $storageConnStr
-#Copy a sample file to the source folder
-az storage file upload -s fshare --source ~/clouddrive/adflab/fileshare/AUS-State.csv --connection-string $storageConnStr -p src
 
 #########################Service Object for Database
 #Update the adflab databse to S0
