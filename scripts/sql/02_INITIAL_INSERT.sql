@@ -41,7 +41,7 @@ INSERT INTO [UTIL].[DataLoadMetadata_FromTable_ToTable] (
 VALUES
 ('Src-Azure', 'WideWorldImporters', 'Application', 'Countries', NULL, 'STG', 'Application_Countries', 'dbo.spLoad_Country', 0, NULL, NULL, 0, 1, 1), 
 ('Src-Azure', 'WideWorldImporters', 'Application', 'StateProvinces', NULL, 'STG', 'Application_StateProvinces', 'dbo.spLoad_StateProvince', 0, NULL, NULL, 0, 1, 2), 
-('Src-Azure', 'WideWorldImporters', 'Application', 'Cities', 'SELECT [CityID] ,[CityName] ,[StateProvinceID] ,CONVERT(varbinary(4000), [Location]) [Location] ,LatestRecordedPopulation ,[LastEditedBy] ,[ValidFrom] ,[ValidTo] FROM [Application].[Cities]', 'STG', 'Application_Cities', NULL, 0, NULL, NULL, 1, 1, 1),
+('Src-Azure', 'WideWorldImporters', 'Application', 'Cities', 'SELECT [CityID] ,[CityName] ,[StateProvinceID] ,CONVERT(varbinary(4000), [Location]) [Location] ,LatestRecordedPopulation ,[LastEditedBy] ,[ValidFrom] ,[ValidTo] FROM [Application].[Cities]', 'STG', 'Application_Cities', 'dbo.spLoad_City', 0, NULL, NULL, 1, 1, 1),
 ('Src-Azure', 'WideWorldImporters', 'Application', 'CitiesNY', 'SELECT  C.*
 FROM [Application].Cities C
 INNER JOIN [Application].StateProvinces S ON S.StateProvinceID = C.StateProvinceID
@@ -49,6 +49,7 @@ WHERE StateProvinceName = ''New York''', 'STG', 'Application_Cities_NY', NULL, 0
 ('Src-Azure', 'WideWorldImporters', 'Application', 'DeliveryMethods', NULL, 'STG', 'Application_DeliveryMethods', NULL, 0, NULL, NULL, 1, 1, 1),
 ('Src-Azure', 'WideWorldImporters', 'Application', 'PaymentMethods', NULL, 'STG', 'Application_PaymentMethods', NULL, 0, NULL, NULL, 1, 1, 1),
 ('Src-Azure', 'WideWorldImporters', 'Application', 'People', NULL, 'STG', 'Application_People', NULL, 0, NULL, NULL, 1, 1, 1),
+('Src-Azure', 'WideWorldImporters', 'Sales', 'Customers', NULL, 'STG', 'Sales_Customers', 'dbo.sp_LoadCustomer', 0, NULL, NULL, 1, 1, 1),
 ('Src-Azure', 'WideWorldImporters', 'Sales', 'Invoices', NULL, 'STG', 'Sales_Invoices', NULL, 1, 'LastEditedWhen', 'DATE', 1, 2, 1)
 
 SELECT * FROM [UTIL].[DataLoadMetadata_FromTable_ToTable]
