@@ -4,7 +4,7 @@ CREATE TABLE Security.StateAccess (
 StateCode NVARCHAR(50),
 UserName NVARCHAR(100),
 Valid bit)
-
+GO
 
 
 DELETE FROM Security.StateAccess WHERE UserName = 'rahul.agrawal@velrada.com'
@@ -15,7 +15,7 @@ INSERT INTO Security.StateAccess (StateCode, UserName, Valid) VALUES ('FL', 'rah
 INSERT INTO Security.StateAccess (StateCode, UserName, Valid) VALUES ('CO', 'lee.moran@velrada.com', 1)
 INSERT INTO Security.StateAccess (StateCode, UserName, Valid) VALUES ('CT', 'lee.moran@velrada.com', 1)
 INSERT INTO Security.StateAccess (StateCode, UserName, Valid) VALUES ('DC', 'lee.moran@velrada.com', 1)
-
+GO
 
 CREATE OR ALTER FUNCTION Security.fnStateProvinceSecurityPredicate(@CustomerID as INT)
 	RETURNS TABLE
