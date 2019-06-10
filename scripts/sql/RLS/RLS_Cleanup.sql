@@ -1,0 +1,2 @@
+DROP SECURITY POLICY SalesInvoiceFilter
+DROP FUNCTION IF EXISTS Security.fnStateProvinceSecurityPredicate
