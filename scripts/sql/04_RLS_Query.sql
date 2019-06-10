@@ -9,9 +9,10 @@ EXECUTE AS USER = 'lee.moran@velrada.com'
 
 SELECT SP.StateProvinceCode, COUNT(*)
 FROM STG.Sales_Invoices I
-INNER JOIN dbo.Customers C ON I.CustomerID = C.CustomerSourceID
-INNER JOIN dbo.City CT ON C.PostalCityID = CT.CitySourceID
+INNER JOIN dbo.Customer C ON I.CustomerID = C.CustomerSourceID
+INNER JOIN dbo.City CT ON C.PostalCityKey = CT.CityKey
 INNER JOIN dbo.StateProvince SP ON SP.StateProvinceKey = CT.StateProvinceKey
 GROUP BY SP.StateProvinceCode
+
 
 REVERT
