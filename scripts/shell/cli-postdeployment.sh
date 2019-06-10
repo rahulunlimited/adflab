@@ -1,8 +1,8 @@
 ################### 01 - Assign Global Variables
 #******PLEASE UPDATE THIS****************
 SUBSCRIPTIONID="5f454d76-f1a1-4e10-ba09-e6cc9296f7e2"
-RESOURCEGROUP="RG-ADF"
-PROJECTPREFIX="vlr1"
+RESOURCEGROUP="ResG-ADF"
+PROJECTPREFIX="vlradf1"
 
 myusername='Rahul.Agrawal@velrada.com'
 
@@ -21,7 +21,7 @@ scope="/subscriptions/$SUBSCRIPTIONID/resourceGroups/$RESOURCEGROUP/providers/Mi
 uid=$(az ad user list --upn $myusername --query "[].objectId" -o tsv)
 
 #Set Key Access Policyy for User
-az keyvault set-policy --name $keyVaultName --upn "Rahul.Agrawal@velrada.com" --secret-permissions get list set
+az keyvault set-policy --name $keyVaultName --upn "Rahul.Agrawal@velrada.com" --resource-group $RESOURCEGROUP --secret-permissions get list set
 
 ################### 03 - Import ADF 
 #Assign varibales for ADF
