@@ -107,25 +107,4 @@ az storage file upload -s fshare --source ~/clouddrive/adflab/fileshare/AUS-Stat
 #########################Restore Database 
 #Add User as Server AD Admin
 az sql server ad-admin create --display-name $myusername --server $sqlServerName -g $RESOURCEGROUP -i $uid
-#Assign variable for Database
-sqlADFLabDB="adflab"
-sqlADFUser="veladmin"
-dbWideWorldImporters="WideWorldImporters"
-#Get password from KeyVault
-pwdSQLAdmin=$(az keyvault secret show --name db-adflab-password --vault-name $keyVaultName --query value -o tsv)
-echo $pwdSQLAdmin
-#Get Storage Key from KeyVault
-storageKey=$(az storage account keys list --account-name vlrlearnstore --query [0].value -o tsv)
-echo $storageKey
-#Restore the bacpac for adflab. Please note an empty database should be present before importing the bacpac
-az sql db import -s $sqlServerName -n $sqlADFLabDB -g $RESOURCEGROUP -p $pwdSQLAdmin -u $sqlADFUser --storage-key $storageKey --storage-key-type StorageAccessKey --storage-uri https://vlrlearnstore.blob.core.windows.net/sqldb/adflab.bacpac
-#Create a new empty database for WideWorldImporters
-az sql db create -g $RESOURCEGROUP -s $sqlServerName -n $dbWideWorldImporters --service-objective S4
-#Restore the bacpac from Azure Storage
-az sql db import -s $sqlServerName -n $dbWideWorldImporters -g $RESOURCEGROUP -p $pwdSQLAdmin -u $sqlADFUser --storage-key $storageKey --storage-key-type StorageAccessKey --storage-uri https://vlrlearnstore.blob.core.windows.net/sqldb/WideWorldImporters-Standard.bacpac
 
-#########################Service Object for Database
-#Update the adflab databse to S0
-az sql db update -g $RESOURCEGROUP -s $sqlServerName -n $sqlADFLabDB --service-objective S0
-#Update the WideWorldImporters database to S0
-az sql db update -g $RESOURCEGROUP -s $sqlServerName -n $dbWideWorldImporters --service-objective S0

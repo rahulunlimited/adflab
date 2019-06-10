@@ -49,7 +49,7 @@ WHERE StateProvinceName = ''New York''', 'STG', 'Application_Cities_NY', NULL, 0
 ('Src-Azure', 'WideWorldImporters', 'Application', 'DeliveryMethods', NULL, 'STG', 'Application_DeliveryMethods', NULL, 0, NULL, NULL, 1, 1, 1),
 ('Src-Azure', 'WideWorldImporters', 'Application', 'PaymentMethods', NULL, 'STG', 'Application_PaymentMethods', NULL, 0, NULL, NULL, 1, 1, 1),
 ('Src-Azure', 'WideWorldImporters', 'Application', 'People', NULL, 'STG', 'Application_People', NULL, 0, NULL, NULL, 1, 1, 1),
-('Src-Azure', 'WideWorldImporters', 'Sales', 'Customers', NULL, 'STG', 'Sales_Customers', 'dbo.sp_LoadCustomer', 0, NULL, NULL, 1, 1, 1),
+('Src-Azure', 'WideWorldImporters', 'Sales', 'Customers', NULL, 'STG', 'Sales_Customers', 'dbo.spLoad_Customer', 0, NULL, NULL, 1, 1, 1),
 ('Src-Azure', 'WideWorldImporters', 'Sales', 'Invoices', NULL, 'STG', 'Sales_Invoices', NULL, 1, 'LastEditedWhen', 'DATE', 1, 2, 1)
 
 SELECT * FROM [UTIL].[DataLoadMetadata_FromTable_ToTable]
