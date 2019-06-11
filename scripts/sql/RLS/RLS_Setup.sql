@@ -26,7 +26,7 @@ AS
 	FROM Security.StateAccess SA
 	INNER JOIN dbo.StateProvince SP ON SA.StateCode = SP.StateProvinceCode
 	INNER JOIN dbo.City CT ON SP.StateProvinceKey = CT.StateProvinceKey
-	INNER JOIN dbo.Customers C ON C.PostalCityKey = CT.CityKey
+	INNER JOIN dbo.Customer C ON C.PostalCityKey = CT.CityKey
 	WHERE SA.Valid = 1
 	AND (C.CustomerSourceID = @CustomerID AND SA.UserName = USER_NAME())
 	OR USER_NAME() = 'dbo'

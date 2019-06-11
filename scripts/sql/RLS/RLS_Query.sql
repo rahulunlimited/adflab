@@ -6,6 +6,8 @@ GRANT SELECT, CONNECT TO [lee.moran@velrada.com]
 GO
 
 EXECUTE AS USER = 'lee.moran@velrada.com'
+SELECT USER_NAME()
+
 
 SELECT SP.StateProvinceCode, COUNT(*)
 FROM STG.Sales_Invoices I
@@ -16,3 +18,4 @@ GROUP BY SP.StateProvinceCode
 
 
 REVERT
+SELECT USER_NAME()

@@ -4,19 +4,10 @@ SUBSCRIPTIONID="5f454d76-f1a1-4e10-ba09-e6cc9296f7e2"
 RESOURCEGROUP="ResG-ADF"
 PROJECTPREFIX="vlradf1"
 
-myusername='Rahul.Agrawal@velrada.com'
-
 ################### 02 - Assign Resource Variables
 #******PLEASE DO NOT UPDATE INFORMATION BELOW THIS SECTION****************
 keyVaultName="$PROJECTPREFIX"kv
-appName="$PROJECTPREFIX"app
-dataLakeName="$PROJECTPREFIX"datalake
-fnAppName="$PROJECTPREFIX"fnApp
-umiName="$PROJECTPREFIX"umi
-adfName="$PROJECTPREFIX"adf
 sqlServerName="$PROJECTPREFIX"sql
-storageName="$PROJECTPREFIX"storage
-scope="/subscriptions/$SUBSCRIPTIONID/resourceGroups/$RESOURCEGROUP/providers/Microsoft.Storage/storageAccounts/$dataLakeName"
 
 
 #########################Restore Database 
@@ -24,7 +15,6 @@ scope="/subscriptions/$SUBSCRIPTIONID/resourceGroups/$RESOURCEGROUP/providers/Mi
 #Assign variable for Database
 sqlADFLabDB="adflab"
 sqlADFUser="veladmin"
-dbWideWorldImporters="WideWorldImporters"
 #Get password from KeyVault
 pwdSQLAdmin=$(az keyvault secret show --name db-adflab-password --vault-name $keyVaultName --query value -o tsv)
 echo $pwdSQLAdmin
@@ -33,13 +23,14 @@ storageKey=$(az storage account keys list --account-name vlrlearn --query [0].va
 echo $storageKey
 #Restore the bacpac for adflab. Please note an empty database should be present before importing the bacpac
 az sql db import -s $sqlServerName -n $sqlADFLabDB -g $RESOURCEGROUP -p $pwdSQLAdmin -u $sqlADFUser --storage-key $storageKey --storage-key-type StorageAccessKey --storage-uri https://vlrlearn.blob.core.windows.net/bacpac/adflab.bacpac
+
 #Create a new empty database for WideWorldImporters
-az sql db create -g $RESOURCEGROUP -s $sqlServerName -n $dbWideWorldImporters --service-objective S4
+#az sql db create -g $RESOURCEGROUP -s $sqlServerName -n $dbWideWorldImporters --service-objective S4
 #Restore the bacpac from Azure Storage
-az sql db import -s $sqlServerName -n $dbWideWorldImporters -g $RESOURCEGROUP -p $pwdSQLAdmin -u $sqlADFUser --storage-key $storageKey --storage-key-type StorageAccessKey --storage-uri https://vlrlearn.blob.core.windows.net/bacpac/WideWorldImporters-Standard.bacpac
+#az sql db import -s $sqlServerName -n $dbWideWorldImporters -g $RESOURCEGROUP -p $pwdSQLAdmin -u $sqlADFUser --storage-key $storageKey --storage-key-type StorageAccessKey --storage-uri https://vlrlearn.blob.core.windows.net/bacpac/WideWorldImporters-Standard.bacpac
 
 #########################Service Object for Database
 #Update the adflab databse to S0
 az sql db update -g $RESOURCEGROUP -s $sqlServerName -n $sqlADFLabDB --service-objective S0
 #Update the WideWorldImporters database to S0
-az sql db update -g $RESOURCEGROUP -s $sqlServerName -n $dbWideWorldImporters --service-objective S0
+#az sql db update -g $RESOURCEGROUP -s $sqlServerName -n $dbWideWorldImporters --service-objective S0
