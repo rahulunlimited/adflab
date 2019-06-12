@@ -21,7 +21,7 @@ scope="/subscriptions/$SUBSCRIPTIONID/resourceGroups/$RESOURCEGROUP/providers/Mi
 uid=$(az ad user list --upn $myusername --query "[].objectId" -o tsv)
 
 #Set Key Access Policyy for User
-az keyvault set-policy --name $keyVaultName --upn "Rahul.Agrawal@velrada.com" --resource-group $RESOURCEGROUP --secret-permissions get list set
+az keyvault set-policy --name $keyVaultName --upn $myusername --resource-group $RESOURCEGROUP --secret-permissions get list set
 
 ################### 03 - Import ADF 
 #Assign varibales for ADF
