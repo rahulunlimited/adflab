@@ -92,6 +92,11 @@ echo $fnAppId
 #Assign Access Policy
 az keyvault set-policy --name $keyVaultName --object-id $fnAppId --secret-permissions get
 
+#########################DB Admin
+#Add User as Server AD Admin
+az sql server ad-admin create --display-name $myusername --server $sqlServerName -g $RESOURCEGROUP -i $uid
+
+
 #########################File Share
 #Get the connection-string for Storage Account
 storageConnStr=$(az keyvault secret show --name blob-connection-string --vault-name $keyVaultName --query value -o tsv)
@@ -103,8 +108,4 @@ az storage directory create --name dest -s fshare --connection-string $storageCo
 #Copy a sample file to the source folder
 az storage file upload -s fshare --source ~/clouddrive/adflab/fileshare/AUS-State.csv --connection-string $storageConnStr -p src
 
-
-#########################Restore Database 
-#Add User as Server AD Admin
-az sql server ad-admin create --display-name $myusername --server $sqlServerName -g $RESOURCEGROUP -i $uid
 
