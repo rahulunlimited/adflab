@@ -11,29 +11,9 @@
             "type": "secureString",
             "metadata": "Secure string for 'connectionString' of 'LinkedServiceSourceAzureDatabase'"
         },
-        "LinkedServiceAzureKeyVault_properties_typeProperties_baseUrl": {
-            "type": "string",
-            "defaultValue": "https://vlrtest1kv.vault.azure.net/"
-        },
-        "LinkedServiceAzureFileStorage_properties_typeProperties_userId": {
-            "type": "string",
-            "defaultValue": "AZURE\\vlrtest1storage"
-        },
-        "LinkedServiceAzureDLGen2Storage_properties_typeProperties_url": {
-            "type": "string",
-            "defaultValue": "https://vlrtest1datalake.dfs.core.windows.net"
-        },
-        "LinkedServiceAzureBlobStorage_properties_typeProperties_connectionString_secretName": {
-            "type": "string",
-            "defaultValue": "blob-connection-string"
-        },
-        "LinkedServiceSourceOnPremDatabase_properties_typeProperties_connectionString_secretName": {
-            "type": "string",
-            "defaultValue": "db-source-onprem-connstr"
-        },
-        "LinkedServiceTargetDatabase_properties_typeProperties_connectionString_secretName": {
-            "type": "string",
-            "defaultValue": "db-adflab-connstr"
+        "LinkedServiceSourceOnPremDatabase_connectionString": {
+            "type": "secureString",
+            "metadata": "Secure string for 'connectionString' of 'LinkedServiceSourceOnPremDatabase'"
         },
         "DSTextFileGeneral_properties_typeProperties_fileName": {
             "type": "string",
@@ -50,6 +30,26 @@
         "DSDataLakeGeneral_properties_typeProperties_folderPath": {
             "type": "string",
             "defaultValue": "@{concat(dataset().container, '/', dataset().folder)}"
+        },
+        "LinkedServiceAzureKeyVault_properties_typeProperties_baseUrl": {
+            "type": "string",
+            "defaultValue": "https://vlrtest1kv.vault.azure.net/"
+        },
+        "LinkedServiceAzureFileStorage_properties_typeProperties_userId": {
+            "type": "string",
+            "defaultValue": "AZURE\\vlrtest1storage"
+        },
+        "LinkedServiceAzureDLGen2Storage_properties_typeProperties_url": {
+            "type": "string",
+            "defaultValue": "https://vlrtest1datalake.dfs.core.windows.net"
+        },
+        "LinkedServiceAzureBlobStorage_properties_typeProperties_connectionString_secretName": {
+            "type": "string",
+            "defaultValue": "blob-connection-string"
+        },
+        "LinkedServiceTargetDatabase_properties_typeProperties_connectionString_secretName": {
+            "type": "string",
+            "defaultValue": "db-adflab-connstr"
         }
     },
     "variables": {
@@ -85,218 +85,6 @@
                 "typeProperties": {}
             },
             "dependsOn": []
-        },
-        {
-            "name": "[concat(parameters('factoryName'), '/LinkedServiceAzureKeyVault')]",
-            "type": "Microsoft.DataFactory/factories/linkedServices",
-            "apiVersion": "2018-06-01",
-            "properties": {
-                "annotations": [],
-                "type": "AzureKeyVault",
-                "typeProperties": {
-                    "baseUrl": "[parameters('LinkedServiceAzureKeyVault_properties_typeProperties_baseUrl')]"
-                }
-            },
-            "dependsOn": []
-        },
-        {
-            "name": "[concat(parameters('factoryName'), '/LinkedServiceSourceAzureDatabase')]",
-            "type": "Microsoft.DataFactory/factories/linkedServices",
-            "apiVersion": "2018-06-01",
-            "properties": {
-                "parameters": {
-                    "DBName": {
-                        "type": "String"
-                    }
-                },
-                "annotations": [],
-                "type": "AzureSqlDatabase",
-                "typeProperties": {
-                    "connectionString": "[parameters('LinkedServiceSourceAzureDatabase_connectionString')]",
-                    "password": {
-                        "type": "AzureKeyVaultSecret",
-                        "store": {
-                            "referenceName": "LinkedServiceAzureKeyVault",
-                            "type": "LinkedServiceReference"
-                        },
-                        "secretName": "db-source-azure-password"
-                    }
-                }
-            },
-            "dependsOn": [
-                "[concat(variables('factoryId'), '/linkedServices/LinkedServiceAzureKeyVault')]"
-            ]
-        },
-        {
-            "name": "[concat(parameters('factoryName'), '/LinkedServiceDataBricks')]",
-            "type": "Microsoft.DataFactory/factories/linkedServices",
-            "apiVersion": "2018-06-01",
-            "properties": {
-                "annotations": [],
-                "type": "AzureDatabricks",
-                "typeProperties": {
-                    "domain": "https://australiaeast.azuredatabricks.net",
-                    "accessToken": {
-                        "type": "AzureKeyVaultSecret",
-                        "store": {
-                            "referenceName": "LinkedServiceAzureKeyVault",
-                            "type": "LinkedServiceReference"
-                        },
-                        "secretName": "databricks-token"
-                    },
-                    "existingClusterId": "0508-062720-churl317"
-                }
-            },
-            "dependsOn": [
-                "[concat(variables('factoryId'), '/linkedServices/LinkedServiceAzureKeyVault')]"
-            ]
-        },
-        {
-            "name": "[concat(parameters('factoryName'), '/LinkedServiceAzureFileStorage')]",
-            "type": "Microsoft.DataFactory/factories/linkedServices",
-            "apiVersion": "2018-06-01",
-            "properties": {
-                "description": "Connection for File Storage",
-                "annotations": [],
-                "type": "FileServer",
-                "typeProperties": {
-                    "host": "\\\\vlradf1storage.file.core.windows.net\\fshare",
-                    "userId": "[parameters('LinkedServiceAzureFileStorage_properties_typeProperties_userId')]",
-                    "password": {
-                        "type": "AzureKeyVaultSecret",
-                        "store": {
-                            "referenceName": "LinkedServiceAzureKeyVault",
-                            "type": "LinkedServiceReference"
-                        },
-                        "secretName": "blob-storage-key"
-                    }
-                },
-                "connectVia": {
-                    "referenceName": "IntegrationRuntime-Region",
-                    "type": "IntegrationRuntimeReference"
-                }
-            },
-            "dependsOn": [
-                "[concat(variables('factoryId'), '/integrationRuntimes/IntegrationRuntime-Region')]",
-                "[concat(variables('factoryId'), '/linkedServices/LinkedServiceAzureKeyVault')]"
-            ]
-        },
-        {
-            "name": "[concat(parameters('factoryName'), '/LinkedServiceAzureDLGen2Storage')]",
-            "type": "Microsoft.DataFactory/factories/linkedServices",
-            "apiVersion": "2018-06-01",
-            "properties": {
-                "annotations": [],
-                "type": "AzureBlobFS",
-                "typeProperties": {
-                    "url": "[parameters('LinkedServiceAzureDLGen2Storage_properties_typeProperties_url')]",
-                    "accountKey": {
-                        "type": "AzureKeyVaultSecret",
-                        "store": {
-                            "referenceName": "LinkedServiceAzureKeyVault",
-                            "type": "LinkedServiceReference"
-                        },
-                        "secretName": "datalake-storage-key"
-                    }
-                }
-            },
-            "dependsOn": [
-                "[concat(variables('factoryId'), '/linkedServices/LinkedServiceAzureKeyVault')]"
-            ]
-        },
-        {
-            "name": "[concat(parameters('factoryName'), '/LinkedServiceAzureBlobStorage')]",
-            "type": "Microsoft.DataFactory/factories/linkedServices",
-            "apiVersion": "2018-06-01",
-            "properties": {
-                "annotations": [],
-                "type": "AzureStorage",
-                "typeProperties": {
-                    "connectionString": {
-                        "type": "AzureKeyVaultSecret",
-                        "store": {
-                            "referenceName": "LinkedServiceAzureKeyVault",
-                            "type": "LinkedServiceReference"
-                        },
-                        "secretName": "[parameters('LinkedServiceAzureBlobStorage_properties_typeProperties_connectionString_secretName')]"
-                    }
-                }
-            },
-            "dependsOn": [
-                "[concat(variables('factoryId'), '/linkedServices/LinkedServiceAzureKeyVault')]"
-            ]
-        },
-        {
-            "name": "[concat(parameters('factoryName'), '/LinkedServiceSourceOnPremDatabase')]",
-            "type": "Microsoft.DataFactory/factories/linkedServices",
-            "apiVersion": "2018-06-01",
-            "properties": {
-                "annotations": [],
-                "type": "SqlServer",
-                "typeProperties": {
-                    "connectionString": {
-                        "type": "AzureKeyVaultSecret",
-                        "store": {
-                            "referenceName": "LinkedServiceAzureKeyVault",
-                            "type": "LinkedServiceReference"
-                        },
-                        "secretName": "[parameters('LinkedServiceSourceOnPremDatabase_properties_typeProperties_connectionString_secretName')]"
-                    }
-                },
-                "connectVia": {
-                    "referenceName": "OnPremRuntime",
-                    "type": "IntegrationRuntimeReference"
-                }
-            },
-            "dependsOn": [
-                "[concat(variables('factoryId'), '/integrationRuntimes/OnPremRuntime')]",
-                "[concat(variables('factoryId'), '/linkedServices/LinkedServiceAzureKeyVault')]"
-            ]
-        },
-        {
-            "name": "[concat(parameters('factoryName'), '/LinkedServiceAzureFunction')]",
-            "type": "Microsoft.DataFactory/factories/linkedServices",
-            "apiVersion": "2018-06-01",
-            "properties": {
-                "annotations": [],
-                "type": "AzureFunction",
-                "typeProperties": {
-                    "functionAppUrl": "https://vlradf1fnapp.azurewebsites.net",
-                    "functionKey": {
-                        "type": "AzureKeyVaultSecret",
-                        "store": {
-                            "referenceName": "LinkedServiceAzureKeyVault",
-                            "type": "LinkedServiceReference"
-                        },
-                        "secretName": "azurefunction-fileservice-key"
-                    }
-                }
-            },
-            "dependsOn": [
-                "[concat(variables('factoryId'), '/linkedServices/LinkedServiceAzureKeyVault')]"
-            ]
-        },
-        {
-            "name": "[concat(parameters('factoryName'), '/LinkedServiceTargetDatabase')]",
-            "type": "Microsoft.DataFactory/factories/linkedServices",
-            "apiVersion": "2018-06-01",
-            "properties": {
-                "annotations": [],
-                "type": "AzureSqlDatabase",
-                "typeProperties": {
-                    "connectionString": {
-                        "type": "AzureKeyVaultSecret",
-                        "store": {
-                            "referenceName": "LinkedServiceAzureKeyVault",
-                            "type": "LinkedServiceReference"
-                        },
-                        "secretName": "[parameters('LinkedServiceTargetDatabase_properties_typeProperties_connectionString_secretName')]"
-                    }
-                }
-            },
-            "dependsOn": [
-                "[concat(variables('factoryId'), '/linkedServices/LinkedServiceAzureKeyVault')]"
-            ]
         },
         {
             "name": "[concat(parameters('factoryName'), '/DSDBSourceAzureGeneral')]",
@@ -511,6 +299,225 @@
             },
             "dependsOn": [
                 "[concat(variables('factoryId'), '/linkedServices/LinkedServiceTargetDatabase')]"
+            ]
+        },
+        {
+            "name": "[concat(parameters('factoryName'), '/LinkedServiceAzureKeyVault')]",
+            "type": "Microsoft.DataFactory/factories/linkedServices",
+            "apiVersion": "2018-06-01",
+            "properties": {
+                "annotations": [],
+                "type": "AzureKeyVault",
+                "typeProperties": {
+                    "baseUrl": "[parameters('LinkedServiceAzureKeyVault_properties_typeProperties_baseUrl')]"
+                }
+            },
+            "dependsOn": []
+        },
+        {
+            "name": "[concat(parameters('factoryName'), '/LinkedServiceSourceAzureDatabase')]",
+            "type": "Microsoft.DataFactory/factories/linkedServices",
+            "apiVersion": "2018-06-01",
+            "properties": {
+                "parameters": {
+                    "DBName": {
+                        "type": "String"
+                    }
+                },
+                "annotations": [],
+                "type": "AzureSqlDatabase",
+                "typeProperties": {
+                    "connectionString": "[parameters('LinkedServiceSourceAzureDatabase_connectionString')]",
+                    "password": {
+                        "type": "AzureKeyVaultSecret",
+                        "store": {
+                            "referenceName": "LinkedServiceAzureKeyVault",
+                            "type": "LinkedServiceReference"
+                        },
+                        "secretName": "db-source-azure-password"
+                    }
+                }
+            },
+            "dependsOn": [
+                "[concat(variables('factoryId'), '/linkedServices/LinkedServiceAzureKeyVault')]"
+            ]
+        },
+        {
+            "name": "[concat(parameters('factoryName'), '/LinkedServiceDataBricks')]",
+            "type": "Microsoft.DataFactory/factories/linkedServices",
+            "apiVersion": "2018-06-01",
+            "properties": {
+                "annotations": [],
+                "type": "AzureDatabricks",
+                "typeProperties": {
+                    "domain": "https://australiaeast.azuredatabricks.net",
+                    "accessToken": {
+                        "type": "AzureKeyVaultSecret",
+                        "store": {
+                            "referenceName": "LinkedServiceAzureKeyVault",
+                            "type": "LinkedServiceReference"
+                        },
+                        "secretName": "databricks-token"
+                    },
+                    "existingClusterId": "0508-062720-churl317"
+                }
+            },
+            "dependsOn": [
+                "[concat(variables('factoryId'), '/linkedServices/LinkedServiceAzureKeyVault')]"
+            ]
+        },
+        {
+            "name": "[concat(parameters('factoryName'), '/LinkedServiceAzureFileStorage')]",
+            "type": "Microsoft.DataFactory/factories/linkedServices",
+            "apiVersion": "2018-06-01",
+            "properties": {
+                "description": "Connection for File Storage",
+                "annotations": [],
+                "type": "FileServer",
+                "typeProperties": {
+                    "host": "\\\\vlradf1storage.file.core.windows.net\\fshare",
+                    "userId": "[parameters('LinkedServiceAzureFileStorage_properties_typeProperties_userId')]",
+                    "password": {
+                        "type": "AzureKeyVaultSecret",
+                        "store": {
+                            "referenceName": "LinkedServiceAzureKeyVault",
+                            "type": "LinkedServiceReference"
+                        },
+                        "secretName": "blob-storage-key"
+                    }
+                },
+                "connectVia": {
+                    "referenceName": "IntegrationRuntime-Region",
+                    "type": "IntegrationRuntimeReference"
+                }
+            },
+            "dependsOn": [
+                "[concat(variables('factoryId'), '/integrationRuntimes/IntegrationRuntime-Region')]",
+                "[concat(variables('factoryId'), '/linkedServices/LinkedServiceAzureKeyVault')]"
+            ]
+        },
+        {
+            "name": "[concat(parameters('factoryName'), '/LinkedServiceAzureDLGen2Storage')]",
+            "type": "Microsoft.DataFactory/factories/linkedServices",
+            "apiVersion": "2018-06-01",
+            "properties": {
+                "annotations": [],
+                "type": "AzureBlobFS",
+                "typeProperties": {
+                    "url": "[parameters('LinkedServiceAzureDLGen2Storage_properties_typeProperties_url')]",
+                    "accountKey": {
+                        "type": "AzureKeyVaultSecret",
+                        "store": {
+                            "referenceName": "LinkedServiceAzureKeyVault",
+                            "type": "LinkedServiceReference"
+                        },
+                        "secretName": "datalake-storage-key"
+                    }
+                }
+            },
+            "dependsOn": [
+                "[concat(variables('factoryId'), '/linkedServices/LinkedServiceAzureKeyVault')]"
+            ]
+        },
+        {
+            "name": "[concat(parameters('factoryName'), '/LinkedServiceAzureBlobStorage')]",
+            "type": "Microsoft.DataFactory/factories/linkedServices",
+            "apiVersion": "2018-06-01",
+            "properties": {
+                "annotations": [],
+                "type": "AzureStorage",
+                "typeProperties": {
+                    "connectionString": {
+                        "type": "AzureKeyVaultSecret",
+                        "store": {
+                            "referenceName": "LinkedServiceAzureKeyVault",
+                            "type": "LinkedServiceReference"
+                        },
+                        "secretName": "[parameters('LinkedServiceAzureBlobStorage_properties_typeProperties_connectionString_secretName')]"
+                    }
+                }
+            },
+            "dependsOn": [
+                "[concat(variables('factoryId'), '/linkedServices/LinkedServiceAzureKeyVault')]"
+            ]
+        },
+        {
+            "name": "[concat(parameters('factoryName'), '/LinkedServiceSourceOnPremDatabase')]",
+            "type": "Microsoft.DataFactory/factories/linkedServices",
+            "apiVersion": "2018-06-01",
+            "properties": {
+                "parameters": {
+                    "DBName": {
+                        "type": "String",
+                        "defaultValue": "AdventureWorks2014"
+                    }
+                },
+                "annotations": [],
+                "type": "SqlServer",
+                "typeProperties": {
+                    "connectionString": "[parameters('LinkedServiceSourceOnPremDatabase_connectionString')]",
+                    "password": {
+                        "type": "AzureKeyVaultSecret",
+                        "store": {
+                            "referenceName": "LinkedServiceAzureKeyVault",
+                            "type": "LinkedServiceReference"
+                        },
+                        "secretName": "db-source-onprem-pwd"
+                    }
+                },
+                "connectVia": {
+                    "referenceName": "OnPremRuntime",
+                    "type": "IntegrationRuntimeReference"
+                }
+            },
+            "dependsOn": [
+                "[concat(variables('factoryId'), '/integrationRuntimes/OnPremRuntime')]",
+                "[concat(variables('factoryId'), '/linkedServices/LinkedServiceAzureKeyVault')]"
+            ]
+        },
+        {
+            "name": "[concat(parameters('factoryName'), '/LinkedServiceAzureFunction')]",
+            "type": "Microsoft.DataFactory/factories/linkedServices",
+            "apiVersion": "2018-06-01",
+            "properties": {
+                "annotations": [],
+                "type": "AzureFunction",
+                "typeProperties": {
+                    "functionAppUrl": "https://vlradf1fnapp.azurewebsites.net",
+                    "functionKey": {
+                        "type": "AzureKeyVaultSecret",
+                        "store": {
+                            "referenceName": "LinkedServiceAzureKeyVault",
+                            "type": "LinkedServiceReference"
+                        },
+                        "secretName": "azurefunction-fileservice-key"
+                    }
+                }
+            },
+            "dependsOn": [
+                "[concat(variables('factoryId'), '/linkedServices/LinkedServiceAzureKeyVault')]"
+            ]
+        },
+        {
+            "name": "[concat(parameters('factoryName'), '/LinkedServiceTargetDatabase')]",
+            "type": "Microsoft.DataFactory/factories/linkedServices",
+            "apiVersion": "2018-06-01",
+            "properties": {
+                "annotations": [],
+                "type": "AzureSqlDatabase",
+                "typeProperties": {
+                    "connectionString": {
+                        "type": "AzureKeyVaultSecret",
+                        "store": {
+                            "referenceName": "LinkedServiceAzureKeyVault",
+                            "type": "LinkedServiceReference"
+                        },
+                        "secretName": "[parameters('LinkedServiceTargetDatabase_properties_typeProperties_connectionString_secretName')]"
+                    }
+                }
+            },
+            "dependsOn": [
+                "[concat(variables('factoryId'), '/linkedServices/LinkedServiceAzureKeyVault')]"
             ]
         },
         {

@@ -29,10 +29,6 @@
             "type": "string",
             "defaultValue": "WSLVEL155"
         },
-        "onpremSourceDatabase": {
-            "type": "string",
-            "defaultValue": "AdventureWorks2014"
-        },
         "onpremSourceUserID": {
             "type": "string",
             "defaultValue": "dbadmin"
@@ -87,7 +83,7 @@
         "dbWorkspaceName": "[concat(parameters('project-prefix'),'databricks')]",
         "containerInstanceName": "[concat(parameters('project-prefix'),'-containerinstance')]",
         "managedResourceGroupName": "[concat('databricks-rg-', parameters('project-prefix'), '-', uniqueString(parameters('project-prefix'), resourceGroup().id))]",
-        "onpremconnstr": "[concat('integrated security=False;data source=',parameters('onpremSourceServer'), ';initial catalog=', parameters('onpremSourceDatabase'), ';user id=', parameters('onpremSourceUserID'), ';password=', parameters('onpremSourcePassword'))]"
+        "onpremconnstr": "[concat('integrated security=False;data source=',parameters('onpremSourceServer'), ';initial catalog=@{linkedService().DBName};', 'user id=', parameters('onpremSourceUserID'), ';password=', parameters('onpremSourcePassword'))]"
 
     },
 
