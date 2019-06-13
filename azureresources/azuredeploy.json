@@ -13,13 +13,9 @@
             "type": "string",
             "defaultValue": "3db0dd8c-ea66-4493-81cc-74962d452386"
         },
-        "azureSourceServer": {
+        "azureSourcePassword": {
             "type": "string",
-            "defaultValue": "vlrlearndb"
-        },
-        "azureSourceDatabase": {
-            "type": "string",
-            "defaultValue": "WideWorldImporters-Standard"
+            "defaultValue": ""
         },
         "sqlserverAdminLogin": {
             "type": "string",
@@ -476,11 +472,11 @@
 
         {
             "type": "Microsoft.KeyVault/vaults/secrets",
-            "name": "[concat(variables('adfkeyVaultName'), '/', 'db-source-azure-connstr')]",
+            "name": "[concat(variables('adfkeyVaultName'), '/', 'db-source-azure-password')]",
             "apiVersion": "2015-06-01",
             "properties": {
                 "contentType": "text/plain",
-                "value": "[concat('Integrated Security=False;Encrypt=True;Connection Timeout=30;', 'Data Source=', parameters('azureSourceServer'), '.database.windows.net;', 'Initial Catalog=', parameters('azureSourceDatabase'), ';', 'User ID=', parameters('sqlserverAdminLogin'), ';Password=', parameters('sqlserverAdminPassword'))]"
+                "value": "parameters('azureSourcePassword')"
             },
             "dependsOn": [
                 "[resourceId('Microsoft.KeyVault/vaults', variables('adfkeyVaultName'))]"
