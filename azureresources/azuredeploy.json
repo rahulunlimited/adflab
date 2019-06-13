@@ -46,31 +46,14 @@
             "defaultValue": ""
         },
 
-        "db-masterCollation": {
-            "type": "string",
-            "defaultValue": "SQL_Latin1_General_CP1_CI_AS"
-        },
-        "db-masterEdition": {
-            "type": "string",
-            "defaultValue": "Standard",
-            "allowedValues": [
-                "Basic",
-                "Standard",
-                "Premium"
-            ]
-        },
         "db-masterServiceObjectiveName": {
             "type": "string",
             "defaultValue": "S0",
             "allowedValues": [
-                "Basic",
                 "S0",
                 "S1",
                 "S2",
-                "S4",
-                "P1",
-                "P2",
-                "P3"
+                "S4"
             ],
             "metadata": {
                 "description": "Describes the performance level for Edition"
@@ -91,8 +74,8 @@
         "dbWorkspaceName": "[concat(parameters('project-prefix'),'databricks')]",
         "containerInstanceName": "[concat(parameters('project-prefix'),'-containerinstance')]",
         "managedResourceGroupName": "[concat('databricks-rg-', parameters('project-prefix'), '-', uniqueString(parameters('project-prefix'), resourceGroup().id))]",
-        "sourceonpremconnstr": "[concat('integrated security=False;data source=',parameters('onpremSourceServer'), ';initial catalog=@{linkedService().DBName};', 'user id=', parameters('onpremSourceUserID'), ';password=', parameters('onpremSourcePassword'))]",
-        "sourceazureconnstr": "[concat('integrated security=False;data source=',parameters('azureSourceServer'), ';initial catalog=@{linkedService().DBName};', 'user id=', parameters('azureSourceUserID'), ';password=', parameters('onpremSourcePassword'))]"
+        "sourceonpremconnstr": "[concat('integrated security=False;data source=',parameters('onpremSourceServer'), ';initial catalog=@{linkedService().DBName};', 'user id=', parameters('onpremSourceUserID'), ';')]",
+        "sourceazureconnstr": "[concat('integrated security=False;data source=',parameters('azureSourceServer'), ';initial catalog=@{linkedService().DBName};', 'user id=', parameters('azureSourceUserID'), ';')]"
 
     },
 
@@ -138,8 +121,8 @@
                         "displayName": "adf-master"
                     },
                     "properties": {
-                        "collation": "[parameters('db-masterCollation')]",
-                        "edition": "[parameters('db-masterEdition')]",
+                        "collation": "SQL_Latin1_General_CP1_CI_AS",
+                        "edition": "Standard",
                         "maxSizeBytes": "1073741824",
                         "requestedServiceObjectiveName": "[parameters('db-masterServiceObjectiveName')]"
                     }
