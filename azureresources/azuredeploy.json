@@ -13,6 +13,14 @@
             "type": "string",
             "defaultValue": "3db0dd8c-ea66-4493-81cc-74962d452386"
         },
+        "azureSourceServer": {
+            "type": "string",
+            "defaultValue": "vlrlearndb.database.windows.net"
+        },
+        "azureSourceUserID": {
+            "type": "string",
+            "defaultValue": "velreader"
+        },
         "azureSourcePassword": {
             "type": "string",
             "defaultValue": ""
@@ -83,7 +91,8 @@
         "dbWorkspaceName": "[concat(parameters('project-prefix'),'databricks')]",
         "containerInstanceName": "[concat(parameters('project-prefix'),'-containerinstance')]",
         "managedResourceGroupName": "[concat('databricks-rg-', parameters('project-prefix'), '-', uniqueString(parameters('project-prefix'), resourceGroup().id))]",
-        "onpremconnstr": "[concat('integrated security=False;data source=',parameters('onpremSourceServer'), ';initial catalog=@{linkedService().DBName};', 'user id=', parameters('onpremSourceUserID'), ';password=', parameters('onpremSourcePassword'))]"
+        "sourceonpremconnstr": "[concat('integrated security=False;data source=',parameters('onpremSourceServer'), ';initial catalog=@{linkedService().DBName};', 'user id=', parameters('onpremSourceUserID'), ';password=', parameters('onpremSourcePassword'))]",
+        "sourceazureconnstr": "[concat('integrated security=False;data source=',parameters('azureSourceServer'), ';initial catalog=@{linkedService().DBName};', 'user id=', parameters('azureSourceUserID'), ';password=', parameters('onpremSourcePassword'))]"
 
     },
 
@@ -511,13 +520,26 @@
             "apiVersion": "2015-06-01",
             "properties": {
                 "contentType": "text/plain",
-                "value": "[variables('onpremconnstr')]"
+                "value": "[variables('sourceonpremconnstr')]"
             },
             "dependsOn": [
                 "[resourceId('Microsoft.KeyVault/vaults', variables('adfkeyVaultName'))]"
             ]
         },
 
+
+        {
+            "type": "Microsoft.KeyVault/vaults/secrets",
+            "name": "[concat(variables('adfkeyVaultName'), '/', 'db-source-azure-connstr')]",
+            "apiVersion": "2015-06-01",
+            "properties": {
+                "contentType": "text/plain",
+                "value": "[variables('sourceazureconnstr')]"
+            },
+            "dependsOn": [
+                "[resourceId('Microsoft.KeyVault/vaults', variables('adfkeyVaultName'))]"
+            ]
+        },
 
 
         {

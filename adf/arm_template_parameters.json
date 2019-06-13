@@ -3,7 +3,7 @@
     "contentVersion": "1.0.0.0",
     "parameters": {
         "factoryName": {
-            "value": "vlrtest1adf"
+            "value": "vlradf9adf"
         },
         "LinkedServiceSourceAzureDatabase_connectionString": {
             "value": ""
@@ -24,19 +24,19 @@
             "value": "@{concat(dataset().container, '/', dataset().folder)}"
         },
         "LinkedServiceAzureKeyVault_properties_typeProperties_baseUrl": {
-            "value": "https://vlrtest1kv.vault.azure.net/"
-        },
-        "LinkedServiceAzureFileStorage_properties_typeProperties_userId": {
-            "value": "AZURE\\vlrtest1storage"
-        },
-        "LinkedServiceAzureDLGen2Storage_properties_typeProperties_url": {
-            "value": "https://vlrtest1datalake.dfs.core.windows.net"
+            "value": "https://vlradf9kv.vault.azure.net/"
         },
         "LinkedServiceAzureBlobStorage_properties_typeProperties_connectionString_secretName": {
             "value": "blob-connection-string"
         },
+        "LinkedServiceAzureFileStorage_properties_typeProperties_userId": {
+            "value": "AZURE\\vlradf9storage"
+        },
         "LinkedServiceTargetDatabase_properties_typeProperties_connectionString_secretName": {
             "value": "db-adflab-connstr"
+        },
+        "LinkedServiceAzureDLGen2Storage_properties_typeProperties_url": {
+            "value": "https://vlradf9datalake.dfs.core.windows.net"
         }
     }
 }

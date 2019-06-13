@@ -1,8 +1,8 @@
 ################### 01 - Assign Global Variables
 #******PLEASE UPDATE THIS****************
 SUBSCRIPTIONID="5f454d76-f1a1-4e10-ba09-e6cc9296f7e2"
-RESOURCEGROUP="RG-Test"
-PROJECTPREFIX="vlrtest1"
+RESOURCEGROUP="RGADF"
+PROJECTPREFIX="vlradf9"
 
 myusername='Rahul.Agrawal@velrada.com'
 
@@ -34,9 +34,13 @@ fileStorageUserId="AZURE\\$storageName"
 #Other params = KeyVault URL, ADLS URL, File Storage UserID
 
 #Get OnPrem Connection String
-onPremConnStr=$(az keyvault secret show --name db-source-onprem-connstr --vault-name $keyVaultName --query value -o tsv)
+dbSourceOnPremConnStr=$(az keyvault secret show --name db-source-onprem-connstr --vault-name $keyVaultName --query value -o tsv)
+echo $dbSourceOnPremConnStr
+#Get Azure Connection String
+dbSourceAzureConnStr=$(az keyvault secret show --name db-source-azure-connstr --vault-name $keyVaultName --query value -o tsv)
+echo $dbSourceAzureConnStr
 
-az group deployment create --resource-group $RESOURCEGROUP --template-uri https://raw.githubusercontent.com/rahulunlimited/adflab/master/adf/arm_template.json --parameters factoryName=$adfName LinkedServiceAzureKeyVault_properties_typeProperties_baseUrl=$keyVaultURL LinkedServiceAzureDLGen2Storage_properties_typeProperties_url=$ADLSURL LinkedServiceAzureFileStorage_properties_typeProperties_userId=$fileStorageUserId LinkedServiceSourceAzureDatabase_connectionString='Integrated Security=False;Encrypt=True;Connection Timeout=30;Data Source=vlrlearndb.database.windows.net;Initial Catalog=@{linkedService().DBName};User ID=velreader' LinkedServiceSourceOnPremDatabase_connectionString=$onPremConnStr
+az group deployment create --resource-group $RESOURCEGROUP --template-uri https://raw.githubusercontent.com/rahulunlimited/adflab/master/adf/arm_template.json --parameters factoryName=$adfName LinkedServiceAzureKeyVault_properties_typeProperties_baseUrl=$keyVaultURL LinkedServiceAzureDLGen2Storage_properties_typeProperties_url=$ADLSURL LinkedServiceAzureFileStorage_properties_typeProperties_userId=$fileStorageUserId LinkedServiceSourceOnPremDatabase_connectionString="$dbSourceOnPremConnStr" LinkedServiceSourceAzureDatabase_connectionString="$dbSourceAzureConnStr" 
 
 ################### 04 - Import Function App
 #Import Function App from the Cloudshell storage in Zip format
