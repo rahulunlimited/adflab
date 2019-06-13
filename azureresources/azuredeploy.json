@@ -476,7 +476,7 @@
             "apiVersion": "2015-06-01",
             "properties": {
                 "contentType": "text/plain",
-                "value": "parameters('azureSourcePassword')"
+                "value": "[parameters('azureSourcePassword')]"
             },
             "dependsOn": [
                 "[resourceId('Microsoft.KeyVault/vaults', variables('adfkeyVaultName'))]"
