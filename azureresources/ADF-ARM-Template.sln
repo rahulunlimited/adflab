@@ -1,0 +1,25 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio 15
+VisualStudioVersion = 15.0.28307.271
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{151D2E53-A2C4-4D7D-83FE-D05416EBD58E}") = "ADF-ARM-Template", "ADF-ARM-Template.deployproj", "{F08ECE3B-0631-46C9-BD24-E7E89D61929F}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{F08ECE3B-0631-46C9-BD24-E7E89D61929F}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{F08ECE3B-0631-46C9-BD24-E7E89D61929F}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{F08ECE3B-0631-46C9-BD24-E7E89D61929F}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{F08ECE3B-0631-46C9-BD24-E7E89D61929F}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {D226E240-62E4-4B05-A5FA-D8FFA5794151}
+	EndGlobalSection
+EndGlobal
