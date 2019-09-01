@@ -1,10 +1,10 @@
 ################### 01 - Assign Global Variables
 #******PLEASE UPDATE THIS****************
-SUBSCRIPTIONID="5f454d76-f1a1-4e10-ba09-e6cc9296f7e2"
-RESOURCEGROUP="RGADF"
-PROJECTPREFIX="vlradf9"
+SUBSCRIPTIONID="1dd9e274-7c3d-4adc-bd5e-0d10e526efde"
+RESOURCEGROUP="ResG-Test"
+PROJECTPREFIX="radf"
 
-myusername='Rahul.Agrawal@velrada.com'
+myusername='Rahul.Agrawal@readify.net'
 
 ################### 02 - Assign Resource Variables
 #******PLEASE DO NOT UPDATE INFORMATION BELOW THIS SECTION****************
