@@ -11,15 +11,15 @@
         },
         "directory-id": {
             "type": "string",
-            "defaultValue": "3db0dd8c-ea66-4493-81cc-74962d452386"
+            "defaultValue": "413504eb-8622-47d2-aa72-ddbba4584471"
         },
         "azureSourceServer": {
             "type": "string",
-            "defaultValue": "vlrlearndb.database.windows.net"
+            "defaultValue": "redlearndb.database.windows.net"
         },
         "azureSourceUserID": {
             "type": "string",
-            "defaultValue": "velreader"
+            "defaultValue": "redreader"
         },
         "azureSourcePassword": {
             "type": "string",
@@ -27,7 +27,7 @@
         },
         "sqlserverAdminLogin": {
             "type": "string",
-            "defaultValue": "veladmin"
+            "defaultValue": "redadmin"
         },
         "sqlserverAdminPassword": {
             "type": "securestring",
