@@ -54,7 +54,7 @@ az functionapp deployment source config-zip -g $RESOURCEGROUP -n $fnAppName --sr
 #An App is required to connect to Data Lake Storage account.
 #App also requires a Service Principal to be created
 #Assign App URL
-appURL="http://velrada.com/app/$appName"
+appURL="http://readify.net/app/$appName"
 #Create the App
 az ad app create --display-name $appName --identifier-uris $appURL --homepage $appURL 
 #Get App ID
