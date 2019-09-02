@@ -46,7 +46,9 @@ az group deployment create --resource-group $RESOURCEGROUP --template-uri https:
 #Import Function App from the Cloudshell storage in Zip format
 #Function App is required to archive and check files for File Storage
 #Copy the file from GitHub to a local folder on Cloudshell
-wget -P -nc ~/clouddrive/adflab/fnapp/ "https://github.com/rahulunlimited/adflab/blob/master/functionapp/AzFnFileService.zip"
+#Switch -P for directory
+#Switch --nc --no-clobber for overwriting the file else the files are downloaded with the name .1 .2
+wget --no-clobber -P ~/clouddrive/adflab/fnapp/ "https://github.com/rahulunlimited/adflab/blob/master/functionapp/AzFnFileService.zip"
 #Execute the Zip Deployment
 az functionapp deployment source config-zip -g $RESOURCEGROUP -n $fnAppName --src ~/clouddrive/adflab/fnapp/AzFnFileService.zip
 
