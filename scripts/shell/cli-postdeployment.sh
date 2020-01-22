@@ -2,7 +2,7 @@
 #******PLEASE UPDATE THIS****************
 SUBSCRIPTIONID="ab908bd9-4099-4869-9111-8e2f703691c0"
 RESOURCEGROUP="RG-adflab"
-PROJECTPREFIX="fgadl01"
+PROJECTPREFIX="rgadl01"
 
 myusername='Rahul.Agrawal@insight.com'
 
