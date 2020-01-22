@@ -3,6 +3,7 @@
 SUBSCRIPTIONID="ab908bd9-4099-4869-9111-8e2f703691c0"
 RESOURCEGROUP="RG-adflab"
 PROJECTPREFIX="rgadfl01"
+DOMAIN="insight.com"
 
 myusername='Rahul.Agrawal@insight.com'
 
@@ -56,7 +57,7 @@ az functionapp deployment source config-zip -g $RESOURCEGROUP -n $fnAppName --sr
 #An App is required to connect to Data Lake Storage account.
 #App also requires a Service Principal to be created
 #Assign App URL
-appURL="http://insight.com/app/$appName"
+appURL="http://$DOMAIN/app/$appName"
 #Create the App
 az ad app create --display-name $appName --identifier-uris $appURL --homepage $appURL 
 #Get App ID
