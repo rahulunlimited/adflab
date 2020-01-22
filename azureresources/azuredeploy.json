@@ -11,15 +11,15 @@
         },
         "directory-id": {
             "type": "string",
-            "defaultValue": "413504eb-8622-47d2-aa72-ddbba4584471"
+            "defaultValue": "6c637512-c417-4e78-9d62-b61258e4b619"
         },
         "azureSourceServer": {
             "type": "string",
-            "defaultValue": "redlearndb.database.windows.net"
+            "defaultValue": "ralearnsql.database.windows.net"
         },
         "azureSourceUserID": {
             "type": "string",
-            "defaultValue": "redreader"
+            "defaultValue": "sqladmin"
         },
         "azureSourcePassword": {
             "type": "string",
@@ -27,7 +27,7 @@
         },
         "sqlserverAdminLogin": {
             "type": "string",
-            "defaultValue": "redadmin"
+            "defaultValue": "sqladmin"
         },
         "sqlserverAdminPassword": {
             "type": "securestring",
@@ -35,7 +35,7 @@
         },
         "onpremSourceServer": {
             "type": "string",
-            "defaultValue": "WSLVEL155"
+            "defaultValue": "AUMELNB21153"
         },
         "onpremSourceUserID": {
             "type": "string",
