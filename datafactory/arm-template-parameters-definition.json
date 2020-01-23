@@ -1,0 +1,18 @@
+{
+    "Microsoft.DataFactory/factories/linkedServices": {
+        "*": {
+            "properties": {
+                "typeProperties": {
+                    "connectionString": "|:-connectionString:secureString"
+                }
+            }
+        },
+		"AzureFunction":{
+			"properties": {
+                "typeProperties": {
+                    "functionAppUrl": "-:functionAppUrl:string"
+                }
+			}
+		}
+	}
+}

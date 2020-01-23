@@ -3,19 +3,13 @@
     "contentVersion": "1.0.0.0",
     "parameters": {
         "factoryName": {
-            "value": "vlradf9adf"
-        },
-        "LinkedServiceSourceAzureDatabase_connectionString": {
-            "value": ""
+            "value": "rgadfl01adf"
         },
         "LinkedServiceSourceOnPremDatabase_connectionString": {
             "value": ""
         },
-        "DSTextFileGeneral_properties_typeProperties_fileName": {
-            "value": "@dataset().fileName"
-        },
-        "DSTextFileGeneral_properties_typeProperties_folderPath": {
-            "value": "@dataset().folderPath"
+        "LinkedServiceSourceAzureDatabase_connectionString": {
+            "value": ""
         },
         "DSDataLakeGeneral_properties_typeProperties_fileName": {
             "value": "@dataset().filename"
@@ -23,20 +17,32 @@
         "DSDataLakeGeneral_properties_typeProperties_folderPath": {
             "value": "@{concat(dataset().container, '/', dataset().folder)}"
         },
+        "DSTextFileGeneral_properties_typeProperties_fileName": {
+            "value": "@dataset().fileName"
+        },
+        "DSTextFileGeneral_properties_typeProperties_folderPath": {
+            "value": "@dataset().folderPath"
+        },
         "LinkedServiceAzureKeyVault_properties_typeProperties_baseUrl": {
-            "value": "https://vlradf9kv.vault.azure.net/"
+            "value": "https://rgadfl01kv.vault.azure.net/"
         },
         "LinkedServiceAzureBlobStorage_properties_typeProperties_connectionString_secretName": {
             "value": "blob-connection-string"
         },
-        "LinkedServiceAzureFileStorage_properties_typeProperties_userId": {
-            "value": "AZURE\\vlradf9storage"
-        },
-        "LinkedServiceTargetDatabase_properties_typeProperties_connectionString_secretName": {
-            "value": "db-adflab-connstr"
-        },
         "LinkedServiceAzureDLGen2Storage_properties_typeProperties_url": {
-            "value": "https://vlradf9datalake.dfs.core.windows.net"
+            "value": "https://rgadfl01datalake.dfs.core.windows.net"
+        },
+        "LinkedServiceAzureFileStorage_properties_typeProperties_host": {
+            "value": "\\\\rgadfl01storage.file.core.windows.net\\fshare"
+        },
+        "LinkedServiceAzureFileStorage_properties_typeProperties_userId": {
+            "value": "AZURE\\rgadfl01storage"
+        },
+        "LinkedServiceDataMart_properties_typeProperties_connectionString_secretName": {
+            "value": "db-datamart-connstr"
+        },
+        "LinkedServiceControlDB_properties_typeProperties_connectionString_secretName": {
+            "value": "db-controldb-connstr"
         }
     }
 }
