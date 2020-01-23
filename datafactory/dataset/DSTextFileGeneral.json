@@ -1,0 +1,52 @@
+{
+	"name": "DSTextFileGeneral",
+	"properties": {
+		"linkedServiceName": {
+			"referenceName": "LinkedServiceAzureFileStorage",
+			"type": "LinkedServiceReference"
+		},
+		"parameters": {
+			"columnDelimiter": {
+				"type": "String"
+			},
+			"rowDelimiter": {
+				"type": "String"
+			},
+			"firstRowAsHeader": {
+				"type": "Bool"
+			},
+			"folderPath": {
+				"type": "String"
+			},
+			"fileName": {
+				"type": "String"
+			}
+		},
+		"annotations": [],
+		"type": "FileShare",
+		"typeProperties": {
+			"format": {
+				"type": "TextFormat",
+				"columnDelimiter": {
+					"value": "@dataset().columnDelimiter",
+					"type": "Expression"
+				},
+				"nullValue": "\\N",
+				"treatEmptyAsNull": true,
+				"firstRowAsHeader": {
+					"value": "@dataset().firstRowAsHeader",
+					"type": "Expression"
+				}
+			},
+			"fileName": {
+				"value": "@dataset().fileName",
+				"type": "Expression"
+			},
+			"folderPath": {
+				"value": "@dataset().folderPath",
+				"type": "Expression"
+			}
+		}
+	},
+	"type": "Microsoft.DataFactory/factories/datasets"
+}

@@ -1,0 +1,174 @@
+{
+	"name": "PL-Framework-FromDataLake-ToAzure",
+	"properties": {
+		"activities": [
+			{
+				"name": "SP-InitiateLog",
+				"description": "Initiate the start of the Pipeline.",
+				"type": "SqlServerStoredProcedure",
+				"dependsOn": [],
+				"policy": {
+					"timeout": "7.00:00:00",
+					"retry": 0,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"storedProcedureName": "[UTIL].[spPipelineExecutionInitiate]",
+					"storedProcedureParameters": {
+						"DataFactoryName": {
+							"value": {
+								"value": "@pipeline().DataFactory",
+								"type": "Expression"
+							},
+							"type": "String"
+						},
+						"PipelineName": {
+							"value": {
+								"value": "@pipeline().Pipeline",
+								"type": "Expression"
+							},
+							"type": "String"
+						},
+						"RunID": {
+							"value": {
+								"value": "@pipeline().RunId",
+								"type": "Expression"
+							},
+							"type": "Guid"
+						},
+						"Message": {
+							"value": {
+								"value": "@{pipeline().parameters.SourceFile}",
+								"type": "Expression"
+							},
+							"type": "String"
+						}
+					}
+				},
+				"linkedServiceName": {
+					"referenceName": "LinkedServiceControlDB",
+					"type": "LinkedServiceReference"
+				}
+			},
+			{
+				"name": "LU-Metadata",
+				"description": "Get the metadata for the current object from the SQL Table UTIL.DataLoadMetadata. The metadata should have all information required to load the object.",
+				"type": "Lookup",
+				"dependsOn": [
+					{
+						"activity": "SP-InitiateLog",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"policy": {
+					"timeout": "7.00:00:00",
+					"retry": 0,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"source": {
+						"type": "SqlSource",
+						"sqlReaderQuery": {
+							"value": "SELECT * FROM UTIL.[vDataLoadMetaData_FromFile_ToTable] WHERE SourceSystem = '@{pipeline().parameters.SourceSystem}' AND SourceFile = '@{pipeline().parameters.SourceFile}' ",
+							"type": "Expression"
+						}
+					},
+					"dataset": {
+						"referenceName": "DSDataLoadMetadata",
+						"type": "DatasetReference"
+					}
+				}
+			},
+			{
+				"name": "SP-FinishLog",
+				"description": "Initiate the end of the Pipeline",
+				"type": "SqlServerStoredProcedure",
+				"dependsOn": [
+					{
+						"activity": "DB-LoadData",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"policy": {
+					"timeout": "7.00:00:00",
+					"retry": 0,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"storedProcedureName": "UTIL.spPipelineExecutionFinish",
+					"storedProcedureParameters": {
+						"RunID": {
+							"value": {
+								"value": "@pipeline().RunId",
+								"type": "Expression"
+							},
+							"type": "Guid"
+						}
+					}
+				},
+				"linkedServiceName": {
+					"referenceName": "LinkedServiceControlDB",
+					"type": "LinkedServiceReference"
+				}
+			},
+			{
+				"name": "DB-LoadData",
+				"type": "DatabricksNotebook",
+				"dependsOn": [
+					{
+						"activity": "LU-Metadata",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"policy": {
+					"timeout": "7.00:00:00",
+					"retry": 0,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"notebookPath": "/ADF/Load-DataLake-AzureSQLDB",
+					"baseParameters": {
+						"Entity": {
+							"value": "@activity('LU-Metadata').output.firstRow.SourceFile",
+							"type": "Expression"
+						}
+					}
+				},
+				"linkedServiceName": {
+					"referenceName": "LinkedServiceDataBricks",
+					"type": "LinkedServiceReference"
+				}
+			}
+		],
+		"parameters": {
+			"SourceSystem": {
+				"type": "String",
+				"defaultValue": "ADLS"
+			},
+			"SourceFile": {
+				"type": "String",
+				"defaultValue": "Invoices"
+			}
+		},
+		"folder": {
+			"name": "Framework"
+		},
+		"annotations": []
+	},
+	"type": "Microsoft.DataFactory/factories/pipelines"
+}

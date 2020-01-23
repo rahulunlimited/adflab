@@ -1,0 +1,15 @@
+{
+	"name": "DSDataLoadMetadata",
+	"properties": {
+		"linkedServiceName": {
+			"referenceName": "LinkedServiceControlDB",
+			"type": "LinkedServiceReference"
+		},
+		"annotations": [],
+		"type": "AzureSqlTable",
+		"typeProperties": {
+			"tableName": "[UTIL].[DataLoadMetadata]"
+		}
+	},
+	"type": "Microsoft.DataFactory/factories/datasets"
+}

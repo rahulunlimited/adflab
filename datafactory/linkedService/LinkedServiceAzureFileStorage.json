@@ -1,0 +1,25 @@
+{
+	"name": "LinkedServiceAzureFileStorage",
+	"type": "Microsoft.DataFactory/factories/linkedservices",
+	"properties": {
+		"description": "Connection for File Storage",
+		"annotations": [],
+		"type": "FileServer",
+		"typeProperties": {
+			"host": "\\\\rgadfl01storage.file.core.windows.net\\fshare",
+			"userId": "AZURE\\rgadfl01storage",
+			"password": {
+				"type": "AzureKeyVaultSecret",
+				"store": {
+					"referenceName": "LinkedServiceAzureKeyVault",
+					"type": "LinkedServiceReference"
+				},
+				"secretName": "blob-storage-key"
+			}
+		},
+		"connectVia": {
+			"referenceName": "IntegrationRuntime-Region",
+			"type": "IntegrationRuntimeReference"
+		}
+	}
+}
