@@ -16,10 +16,10 @@ steps:
 - task: MSBuild@1
   displayName: 'Build DataMart'
   inputs:
-    solution: database/DataMart//DataMart.sqlproj
+    solution: code/database/DataMart//DataMart.sqlproj
 
 - task: PublishBuildArtifacts@1
   displayName: 'Publish Artifact: drop'
   inputs:
-    PathtoPublish: databse/CntrolDb/
+    PathtoPublish: code/database/DataMart/bin/Debug
     artifactName: DataMart
