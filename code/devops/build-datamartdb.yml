@@ -1,0 +1,25 @@
+trigger:
+  branches:
+    include:
+      - master
+
+  paths:  
+    include: 
+      - database/DataMart/*
+
+pool:
+  name: Azure Pipelines
+  demands: msbuild
+  vmImage: 'vs2017-win2016'
+
+steps:
+- task: MSBuild@1
+  displayName: 'Build DataMart'
+  inputs:
+    solution: database/DataMart//DataMart.sqlproj
+
+- task: PublishBuildArtifacts@1
+  displayName: 'Publish Artifact: drop'
+  inputs:
+    PathtoPublish: databse/CntrolDb/
+    artifactName: DataMart

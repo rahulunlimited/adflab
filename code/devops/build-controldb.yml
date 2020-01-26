@@ -1,0 +1,25 @@
+trigger:
+  branches:
+    include:
+      - master
+
+  paths:  
+    include: 
+      - database/ControlDb/*
+
+pool:
+  name: Azure Pipelines
+  demands: msbuild
+  vmImage: 'vs2017-win2016'
+
+steps:
+- task: MSBuild@1
+  displayName: 'Build ControlDb'
+  inputs:
+    solution: database/ControlDb//ControlDb.sqlproj
+
+- task: PublishBuildArtifacts@1
+  displayName: 'Publish Artifact: drop'
+  inputs:
+    PathtoPublish: databse/CntrolDb/
+    artifactName: ControlDb
