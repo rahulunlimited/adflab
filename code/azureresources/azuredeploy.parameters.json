@@ -1,41 +1,44 @@
 {
   "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentParameters.json#",
   "contentVersion": "1.0.0.0",
-    "parameters": {
-        "project-prefix": {
-            "value": "vladf01"
-        },
-        "adf-database-name": {
-            "value": "adflab"
-        },
-        "directory-id": {
-            "value": "3db0dd8c-ea66-4493-81cc-74962d452386"
-        },
-        "sqlserverAdminLogin": {
-            "value": "veladmin"
-        },
-        "sqlserverAdminPassword": {
-            "value": "w3!ov31c3cre@ms"
-        },
-        "onpremSourceUserID": {
-            "value": "dbadmin"
-        },
-        "onpremSourcePassword": {
-            "value": "eeRgP$GrJMG9s6"
-        },
-        "onpremSourceServer": {
-            "value": "WSLVEL155"
-        },
-        "onpremSourceDatabase": {
-            "value": "AdventureWorks2014"
-        },
-        "db-masterEdition": {
-            "value": "Standard"
-        },
-        "db-masterServiceObjectiveName": {
-            "value": "S0"
-        }
-
-
+  "parameters": {
+    "project-prefix": {
+      "value": "rgadflau01"
+    },
+    "ControlDB-database-name": {
+      "value": "ControlDB"
+    },
+    "DataMart-database-name": {
+      "value": "DataMart"
+    },
+    "directory-id": {
+      "value": "6c637512-c417-4e78-9d62-b61258e4b619"
+    },
+    "sqlserverAdminLogin": {
+      "value": "sqladmin"
+    },
+    "sqlserverAdminPassword": {
+      "value": "W3!0v31c3Cr3@ms"
+    },
+    "onpremSourceUserID": {
+      "value": "adfsuser"
+    },
+    "onpremSourcePassword": {
+      "value": "sqlserver"
+    },
+    "onpremSourceServer": {
+      "value": "AUMELNB21153"
+    },
+    "onpremSourceDatabase": {
+      "value": "WideWorldImporters"
+    },
+    "db-masterEdition": {
+      "value": "Standard"
+    },
+    "db-masterServiceObjectiveName": {
+      "value": "S0"
     }
+
+
+  }
 }
