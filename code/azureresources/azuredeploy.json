@@ -1,65 +1,69 @@
 {
     "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
     "contentVersion": "1.0.0.0",
-    "parameters": {
-        "project-prefix": {
-            "type": "string"
-        },
-        "adf-database-name": {
-            "type": "string",
-            "defaultValue": "adflab"
-        },
-        "directory-id": {
-            "type": "string",
-            "defaultValue": "6c637512-c417-4e78-9d62-b61258e4b619"
-        },
-        "azureSourceServer": {
-            "type": "string",
-            "defaultValue": "ralearnsql.database.windows.net"
-        },
-        "azureSourceUserID": {
-            "type": "string",
-            "defaultValue": "sqladmin"
-        },
-        "azureSourcePassword": {
-            "type": "string",
-            "defaultValue": ""
-        },
-        "sqlserverAdminLogin": {
-            "type": "string",
-            "defaultValue": "sqladmin"
-        },
-        "sqlserverAdminPassword": {
-            "type": "securestring",
-            "defaultValue": ""
-        },
-        "onpremSourceServer": {
-            "type": "string",
-            "defaultValue": "AUMELNB21153"
-        },
-        "onpremSourceUserID": {
-            "type": "string",
-            "defaultValue": "dbadmin"
-        },
-        "onpremSourcePassword": {
-            "type": "securestring",
-            "defaultValue": ""
-        },
-
-        "db-masterServiceObjectiveName": {
-            "type": "string",
-            "defaultValue": "S0",
-            "allowedValues": [
-                "S0",
-                "S1",
-                "S2",
-                "S4"
-            ],
-            "metadata": {
-                "description": "Describes the performance level for Edition"
-            }
-        }
+  "parameters": {
+    "project-prefix": {
+      "type": "string"
     },
+    "ControlDB-database-name": {
+      "type": "string",
+      "defaultValue": "ControlDB"
+    },
+    "DataMart-database-name": {
+      "type": "string",
+      "defaultValue": "DataMart"
+    },
+    "directory-id": {
+      "type": "string",
+      "defaultValue": "6c637512-c417-4e78-9d62-b61258e4b619"
+    },
+    "azureSourceServer": {
+      "type": "string",
+      "defaultValue": "ralearnsql.database.windows.net"
+    },
+    "azureSourceUserID": {
+      "type": "string",
+      "defaultValue": "sqladmin"
+    },
+    "azureSourcePassword": {
+      "type": "string",
+      "defaultValue": ""
+    },
+    "sqlserverAdminLogin": {
+      "type": "string",
+      "defaultValue": "sqladmin"
+    },
+    "sqlserverAdminPassword": {
+      "type": "securestring",
+      "defaultValue": ""
+    },
+    "onpremSourceServer": {
+      "type": "string",
+      "defaultValue": "AUMELNB21153"
+    },
+    "onpremSourceUserID": {
+      "type": "string",
+      "defaultValue": "dbadmin"
+    },
+    "onpremSourcePassword": {
+      "type": "securestring",
+      "defaultValue": ""
+    },
+
+    "db-masterServiceObjectiveName": {
+      "type": "string",
+      "defaultValue": "S0",
+      "allowedValues": [
+        "S0",
+        "S1",
+        "S2",
+        "S4"
+      ],
+      "metadata": {
+        "description": "Describes the performance level for Edition"
+      }
+    }
+  },
 
     "variables": {
         "image": "microsoft/azure-cli",
@@ -110,7 +114,7 @@
                     }
                 },
                 {
-                    "name": "[parameters('adf-database-name')]",
+                    "name": "[parameters('ControlDB-database-name')]",
                     "type": "databases",
                     "location": "[resourceGroup().location]",
                     "apiVersion": "2014-04-01-preview",
@@ -118,7 +122,7 @@
                         "[resourceId('Microsoft.Sql/servers', variables('adfsqlserverName'))]"
                     ],
                     "tags": {
-                        "displayName": "adf-master"
+                        "displayName": "adf-control-db"
                     },
                     "properties": {
                         "collation": "SQL_Latin1_General_CP1_CI_AS",
@@ -126,7 +130,25 @@
                         "maxSizeBytes": "1073741824",
                         "requestedServiceObjectiveName": "[parameters('db-masterServiceObjectiveName')]"
                     }
+                },
+              {
+                "name": "[parameters('DataMart-database-name')]",
+                "type": "databases",
+                "location": "[resourceGroup().location]",
+                "apiVersion": "2014-04-01-preview",
+                "dependsOn": [
+                  "[resourceId('Microsoft.Sql/servers', variables('adfsqlserverName'))]"
+                ],
+                "tags": {
+                  "displayName": "datamart"
+                },
+                "properties": {
+                  "collation": "SQL_Latin1_General_CP1_CI_AS",
+                  "edition": "Standard",
+                  "maxSizeBytes": "1073741824",
+                  "requestedServiceObjectiveName": "[parameters('db-masterServiceObjectiveName')]"
                 }
+              }
             ]
         },
 
