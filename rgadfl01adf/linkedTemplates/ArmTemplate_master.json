@@ -1,0 +1,153 @@
+{
+	"$schema": "http://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
+	"contentVersion": "1.0.0.0",
+	"parameters": {
+		"factoryName": {
+			"type": "string",
+			"metadata": "Data Factory name",
+			"defaultValue": "rgadfl01adf"
+		},
+		"LinkedServiceSourceAzureDatabase_connectionString": {
+			"type": "secureString",
+			"metadata": "Secure string for 'connectionString' of 'LinkedServiceSourceAzureDatabase'"
+		},
+		"LinkedServiceSourceOnPremDatabase_connectionString": {
+			"type": "secureString",
+			"metadata": "Secure string for 'connectionString' of 'LinkedServiceSourceOnPremDatabase'"
+		},
+		"DSDataLakeGeneral_properties_typeProperties_fileName": {
+			"type": "string",
+			"defaultValue": "@dataset().filename"
+		},
+		"DSDataLakeGeneral_properties_typeProperties_folderPath": {
+			"type": "string",
+			"defaultValue": "@{concat(dataset().container, '/', dataset().folder)}"
+		},
+		"DSTextFileGeneral_properties_typeProperties_fileName": {
+			"type": "string",
+			"defaultValue": "@dataset().fileName"
+		},
+		"DSTextFileGeneral_properties_typeProperties_folderPath": {
+			"type": "string",
+			"defaultValue": "@dataset().folderPath"
+		},
+		"LinkedServiceAzureBlobStorage_properties_typeProperties_connectionString_secretName": {
+			"type": "string",
+			"defaultValue": "blob-connection-string"
+		},
+		"LinkedServiceAzureDLGen2Storage_properties_typeProperties_url": {
+			"type": "string",
+			"defaultValue": "https://rgadfl01datalake.dfs.core.windows.net"
+		},
+		"LinkedServiceAzureFileStorage_properties_typeProperties_host": {
+			"type": "string",
+			"defaultValue": "\\\\rgadfl01storage.file.core.windows.net\\fshare"
+		},
+		"LinkedServiceAzureFileStorage_properties_typeProperties_userId": {
+			"type": "string",
+			"defaultValue": "AZURE\\rgadfl01storage"
+		},
+		"LinkedServiceAzureKeyVault_properties_typeProperties_baseUrl": {
+			"type": "string",
+			"defaultValue": "https://rgadfl01kv.vault.azure.net/"
+		},
+		"LinkedServiceControlDB_properties_typeProperties_connectionString_secretName": {
+			"type": "string",
+			"defaultValue": "db-controldb-connstr"
+		},
+		"LinkedServiceDataMart_properties_typeProperties_connectionString_secretName": {
+			"type": "string",
+			"defaultValue": "db-datamart-connstr"
+		},
+		"containerUri": {
+			"type": "string",
+			"metadata": "URI to storage account containing linked ARM templates"
+		},
+		"containerSasToken": {
+			"type": "string",
+			"metadata": "Sas token to storage account containing linked ARM templates"
+		}
+	},
+	"variables": {
+		"factoryId": "[concat('Microsoft.DataFactory/factories/', parameters('factoryName'))]"
+	},
+	"resources": [
+		{
+			"name": "ArmTemplate_0",
+			"type": "Microsoft.Resources/deployments",
+			"apiVersion": "2018-02-01",
+			"properties": {
+				"mode": "incremental",
+				"templateLink": {
+					"uri": "[concat(parameters('containerUri'), '/ArmTemplate_0.json', parameters('containerSasToken'))]",
+					"contentVersion": "1.0.0.0"
+				},
+				"parameters": {
+					"factoryName": {
+						"value": "[parameters('factoryName')]"
+					},
+					"LinkedServiceSourceAzureDatabase_connectionString": {
+						"value": "[parameters('LinkedServiceSourceAzureDatabase_connectionString')]"
+					},
+					"LinkedServiceSourceOnPremDatabase_connectionString": {
+						"value": "[parameters('LinkedServiceSourceOnPremDatabase_connectionString')]"
+					},
+					"LinkedServiceAzureKeyVault_properties_typeProperties_baseUrl": {
+						"value": "[parameters('LinkedServiceAzureKeyVault_properties_typeProperties_baseUrl')]"
+					},
+					"LinkedServiceAzureBlobStorage_properties_typeProperties_connectionString_secretName": {
+						"value": "[parameters('LinkedServiceAzureBlobStorage_properties_typeProperties_connectionString_secretName')]"
+					},
+					"LinkedServiceAzureDLGen2Storage_properties_typeProperties_url": {
+						"value": "[parameters('LinkedServiceAzureDLGen2Storage_properties_typeProperties_url')]"
+					},
+					"LinkedServiceAzureFileStorage_properties_typeProperties_host": {
+						"value": "[parameters('LinkedServiceAzureFileStorage_properties_typeProperties_host')]"
+					},
+					"LinkedServiceAzureFileStorage_properties_typeProperties_userId": {
+						"value": "[parameters('LinkedServiceAzureFileStorage_properties_typeProperties_userId')]"
+					},
+					"LinkedServiceControlDB_properties_typeProperties_connectionString_secretName": {
+						"value": "[parameters('LinkedServiceControlDB_properties_typeProperties_connectionString_secretName')]"
+					},
+					"LinkedServiceDataMart_properties_typeProperties_connectionString_secretName": {
+						"value": "[parameters('LinkedServiceDataMart_properties_typeProperties_connectionString_secretName')]"
+					},
+					"DSDataLakeGeneral_properties_typeProperties_fileName": {
+						"value": "[parameters('DSDataLakeGeneral_properties_typeProperties_fileName')]"
+					},
+					"DSDataLakeGeneral_properties_typeProperties_folderPath": {
+						"value": "[parameters('DSDataLakeGeneral_properties_typeProperties_folderPath')]"
+					},
+					"DSTextFileGeneral_properties_typeProperties_fileName": {
+						"value": "[parameters('DSTextFileGeneral_properties_typeProperties_fileName')]"
+					},
+					"DSTextFileGeneral_properties_typeProperties_folderPath": {
+						"value": "[parameters('DSTextFileGeneral_properties_typeProperties_folderPath')]"
+					}
+				}
+			},
+			"dependsOn": []
+		},
+		{
+			"name": "ArmTemplate_1",
+			"type": "Microsoft.Resources/deployments",
+			"apiVersion": "2018-02-01",
+			"properties": {
+				"mode": "incremental",
+				"templateLink": {
+					"uri": "[concat(parameters('containerUri'), '/ArmTemplate_1.json', parameters('containerSasToken'))]",
+					"contentVersion": "1.0.0.0"
+				},
+				"parameters": {
+					"factoryName": {
+						"value": "[parameters('factoryName')]"
+					}
+				}
+			},
+			"dependsOn": [
+				"[resourceId('Microsoft.Resources/deployments', 'ArmTemplate_0')]"
+			]
+		}
+	]
+}

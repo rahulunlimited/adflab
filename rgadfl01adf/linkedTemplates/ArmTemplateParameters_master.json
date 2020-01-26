@@ -1,0 +1,54 @@
+{
+	"$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentParameters.json#",
+	"contentVersion": "1.0.0.0",
+	"parameters": {
+		"factoryName": {
+			"value": "rgadfl01adf"
+		},
+		"LinkedServiceSourceAzureDatabase_connectionString": {
+			"value": ""
+		},
+		"LinkedServiceSourceOnPremDatabase_connectionString": {
+			"value": ""
+		},
+		"DSDataLakeGeneral_properties_typeProperties_fileName": {
+			"value": "@dataset().filename"
+		},
+		"DSDataLakeGeneral_properties_typeProperties_folderPath": {
+			"value": "@{concat(dataset().container, '/', dataset().folder)}"
+		},
+		"DSTextFileGeneral_properties_typeProperties_fileName": {
+			"value": "@dataset().fileName"
+		},
+		"DSTextFileGeneral_properties_typeProperties_folderPath": {
+			"value": "@dataset().folderPath"
+		},
+		"LinkedServiceAzureBlobStorage_properties_typeProperties_connectionString_secretName": {
+			"value": "blob-connection-string"
+		},
+		"LinkedServiceAzureDLGen2Storage_properties_typeProperties_url": {
+			"value": "https://rgadfl01datalake.dfs.core.windows.net"
+		},
+		"LinkedServiceAzureFileStorage_properties_typeProperties_host": {
+			"value": "\\\\rgadfl01storage.file.core.windows.net\\fshare"
+		},
+		"LinkedServiceAzureFileStorage_properties_typeProperties_userId": {
+			"value": "AZURE\\rgadfl01storage"
+		},
+		"LinkedServiceAzureKeyVault_properties_typeProperties_baseUrl": {
+			"value": "https://rgadfl01kv.vault.azure.net/"
+		},
+		"LinkedServiceControlDB_properties_typeProperties_connectionString_secretName": {
+			"value": "db-controldb-connstr"
+		},
+		"LinkedServiceDataMart_properties_typeProperties_connectionString_secretName": {
+			"value": "db-datamart-connstr"
+		},
+		"containerUri": {
+			"value": ""
+		},
+		"containerSasToken": {
+			"value": ""
+		}
+	}
+}
