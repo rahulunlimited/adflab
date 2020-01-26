@@ -80,4 +80,7 @@
     <Build Include="UTIL\Stored Procedures\spUpdateLastExtraction.sql" />
     <Build Include="Security\UTIL.sql" />
   </ItemGroup>
+  <ItemGroup>
+    <PostDeploy Include="Insert.Script.PostDeployment.sql" />
+  </ItemGroup>
 </Project>
