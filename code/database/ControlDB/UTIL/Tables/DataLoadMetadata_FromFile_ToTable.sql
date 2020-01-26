@@ -1,5 +1,5 @@
 ﻿CREATE TABLE [UTIL].[DataLoadMetadata_FromFile_ToTable] (
-    [RecordID]         UNIQUEIDENTIFIER CONSTRAINT [Util_DataLoadMetadata_FromFile_ToTable_DF_RecordID] DEFAULT (newid()) NULL,
+    [RecordID]         UNIQUEIDENTIFIER CONSTRAINT [Util_DataLoadMetadata_FromFile_ToTable_DF_RecordID] DEFAULT (newid()) NOT NULL,
     [SourceSystem]     NVARCHAR (100)   NOT NULL,
     [SourceFile]       NVARCHAR (100)   NOT NULL,
     [TargetSchema]     NVARCHAR (100)   NULL,
@@ -11,6 +11,7 @@
     [ColumnDelimiter]  VARCHAR (10)     NULL,
     [RowDelimiter]     VARCHAR (10)     NULL,
     [FirstRowHeader]   BIT              NULL,
-    [PrefixDateTime]   BIT              NULL
+    [PrefixDateTime]   BIT              NULL, 
+    CONSTRAINT [PK_DataLoadMetadata_FromFile_ToTable] PRIMARY KEY ([RecordID])
 );
 

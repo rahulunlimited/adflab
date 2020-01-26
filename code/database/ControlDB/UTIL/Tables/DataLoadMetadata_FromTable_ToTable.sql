@@ -1,5 +1,5 @@
 ﻿CREATE TABLE [UTIL].[DataLoadMetadata_FromTable_ToTable] (
-    [RecordID]                  UNIQUEIDENTIFIER CONSTRAINT [Util_DataLoadMetadata_FromTable_ToTable_DF_RecordID] DEFAULT (newid()) NULL,
+    [RecordID]                  UNIQUEIDENTIFIER CONSTRAINT [Util_DataLoadMetadata_FromTable_ToTable_DF_RecordID] DEFAULT (newid()) NOT NULL,
     [SourceSystem]              NVARCHAR (100)   NOT NULL,
     [SourceDatabase]            NVARCHAR (100)   NULL,
     [SourceSchema]              NVARCHAR (100)   NULL,
@@ -11,6 +11,7 @@
     [TransformationSP]          NVARCHAR (250)   NULL,
     [IncrementalLoadFlag]       BIT              CONSTRAINT [Util_DataLoadMetadata_FromTable_ToTable_DF_IncrementalLoadFlag] DEFAULT ((0)) NULL,
     [IncrementalLoadColumn]     NVARCHAR (100)   NULL,
-    [IncrementalLoadColumnType] NVARCHAR (100)   NULL
+    [IncrementalLoadColumnType] NVARCHAR (100)   NULL, 
+    CONSTRAINT [PK_DataLoadMetadata_FromTable_ToTable] PRIMARY KEY ([RecordID])
 );
 
