@@ -1,0 +1,54 @@
+{
+	"name": "DSDataLakeGeneral",
+	"properties": {
+		"linkedServiceName": {
+			"referenceName": "LinkedServiceAzureDLGen2Storage",
+			"type": "LinkedServiceReference"
+		},
+		"parameters": {
+			"container": {
+				"type": "String",
+				"defaultValue": "prg"
+			},
+			"folder": {
+				"type": "String"
+			},
+			"filename": {
+				"type": "String"
+			},
+			"columnDelimiter": {
+				"type": "string",
+				"defaultValue": ","
+			},
+			"rowDelimiter": {
+				"type": "string",
+				"defaultValue": "\\r\\n"
+			}
+		},
+		"annotations": [],
+		"type": "AzureBlobFSFile",
+		"typeProperties": {
+			"format": {
+				"type": "TextFormat",
+				"columnDelimiter": {
+					"value": "@dataset().columnDelimiter",
+					"type": "Expression"
+				},
+				"quoteChar": "\"",
+				"nullValue": "\\N",
+				"treatEmptyAsNull": true,
+				"skipLineCount": 0,
+				"firstRowAsHeader": true
+			},
+			"fileName": {
+				"value": "@dataset().filename",
+				"type": "Expression"
+			},
+			"folderPath": {
+				"value": "@{concat(dataset().container, '/', dataset().folder)}",
+				"type": "Expression"
+			}
+		}
+	},
+	"type": "Microsoft.DataFactory/factories/datasets"
+}

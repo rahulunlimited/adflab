@@ -1,0 +1,92 @@
+{
+	"name": "PL-Executor-DataLake-Azure",
+	"properties": {
+		"activities": [
+			{
+				"name": "Loop-Tables",
+				"type": "ForEach",
+				"dependsOn": [
+					{
+						"activity": "LU-GetTableList",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"userProperties": [],
+				"typeProperties": {
+					"items": {
+						"value": "@activity('LU-GetTableList').output.value",
+						"type": "Expression"
+					},
+					"isSequential": false,
+					"batchCount": 4,
+					"activities": [
+						{
+							"name": "EP-Framework",
+							"type": "ExecutePipeline",
+							"dependsOn": [],
+							"userProperties": [],
+							"typeProperties": {
+								"pipeline": {
+									"referenceName": "PL-Framework-FromDataLake-ToAzure",
+									"type": "PipelineReference"
+								},
+								"waitOnCompletion": false,
+								"parameters": {
+									"SourceSystem": {
+										"value": "@item().SourceSystem",
+										"type": "Expression"
+									},
+									"SourceFile": {
+										"value": "@item().SourceFile",
+										"type": "Expression"
+									}
+								}
+							}
+						}
+					]
+				}
+			},
+			{
+				"name": "LU-GetTableList",
+				"description": "Get the list of tables to load from the Metadata table",
+				"type": "Lookup",
+				"dependsOn": [],
+				"policy": {
+					"timeout": "7.00:00:00",
+					"retry": 0,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"source": {
+						"type": "SqlSource",
+						"sqlReaderQuery": {
+							"value": "SELECT * FROM UTIL.[vDataLoadMetaData_FromFile_ToTable] WHERE SourceSystem = '@{pipeline().parameters.SourceSystem}'\n",
+							"type": "Expression"
+						}
+					},
+					"dataset": {
+						"referenceName": "DSDataLoadMetadata",
+						"type": "DatasetReference"
+					},
+					"firstRowOnly": false
+				}
+			}
+		],
+		"parameters": {
+			"SourceSystem": {
+				"type": "String",
+				"defaultValue": "ADLS"
+			}
+		},
+		"folder": {
+			"name": "Executor"
+		},
+		"annotations": []
+	},
+	"type": "Microsoft.DataFactory/factories/pipelines"
+}
