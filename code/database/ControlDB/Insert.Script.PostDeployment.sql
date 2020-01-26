@@ -27,12 +27,10 @@ BEGIN
 		,[IncrementalLoadFlag]
 		,[IncrementalLoadColumn]
 		,[IncrementalLoadColumnType]
-		,[RunParallel]
-		,[BatchSequence]
-		,[RunSequence])
+		)
 	VALUES 
-	('Src-OnPrem', 'AdventureWorks2014', 'HumanResources', 'Department', NULL, 'STG', 'HumanResources_Department', NULL, 0, NULL, NULL, 1, 1, 1), 
-	('Src-OnPrem', 'AdventureWorks2014', 'Production', 'WorkOrder', NULL, 'STG', 'Production_WorkOrder', NULL, 1, 'ModifiedDate', 'DATE', 1, 1, 1) 
+	('Src-OnPrem', 'AdventureWorks2014', 'HumanResources', 'Department', NULL, 'STG', 'HumanResources_Department', NULL, 0, NULL, NULL), 
+	('Src-OnPrem', 'AdventureWorks2014', 'Production', 'WorkOrder', NULL, 'STG', 'Production_WorkOrder', NULL, 1, 'ModifiedDate', 'DATE') 
 END
 
 IF NOT EXISTS(SELECT * FROM [UTIL].[DataLoadMetadata_FromTable_ToTable] WHERE SourceSystem = 'Src-Azure')
@@ -52,22 +50,20 @@ BEGIN
 		,[IncrementalLoadFlag]
 		,[IncrementalLoadColumn]
 		,[IncrementalLoadColumnType]
-		,[RunParallel]
-		,[BatchSequence]
-		,[RunSequence])
+		)
 	VALUES
-	('Src-Azure', 'WideWorldImporters-Standard', 'Application', 'Countries', NULL, 'STG', 'Application_Countries', 'dbo.spLoad_Country', 0, NULL, NULL, 0, 1, 1), 
-	('Src-Azure', 'WideWorldImporters-Standard', 'Application', 'StateProvinces', NULL, 'STG', 'Application_StateProvinces', 'dbo.spLoad_StateProvince', 0, NULL, NULL, 0, 1, 2), 
-	('Src-Azure', 'WideWorldImporters-Standard', 'Application', 'Cities', 'SELECT [CityID] ,[CityName] ,[StateProvinceID] ,CONVERT(varbinary(4000), [Location]) [Location] ,LatestRecordedPopulation ,[LastEditedBy] ,[ValidFrom] ,[ValidTo] FROM [Application].[Cities]', 'STG', 'Application_Cities', 'dbo.spLoad_City', 0, NULL, NULL, 1, 1, 1),
+	('Src-Azure', 'WideWorldImporters-Standard', 'Application', 'Countries', NULL, 'STG', 'Application_Countries', 'dbo.spLoad_Country', 0, NULL, NULL), 
+	('Src-Azure', 'WideWorldImporters-Standard', 'Application', 'StateProvinces', NULL, 'STG', 'Application_StateProvinces', 'dbo.spLoad_StateProvince', 0, NULL, NULL), 
+	('Src-Azure', 'WideWorldImporters-Standard', 'Application', 'Cities', 'SELECT [CityID] ,[CityName] ,[StateProvinceID] ,CONVERT(varbinary(4000), [Location]) [Location] ,LatestRecordedPopulation ,[LastEditedBy] ,[ValidFrom] ,[ValidTo] FROM [Application].[Cities]', 'STG', 'Application_Cities', 'dbo.spLoad_City', 0, NULL, NULL),
 	('Src-Azure', 'WideWorldImporters-Standard', 'Application', 'CitiesNY', 'SELECT  C.*
 	FROM [Application].Cities C
 	INNER JOIN [Application].StateProvinces S ON S.StateProvinceID = C.StateProvinceID
-	WHERE StateProvinceName = ''New York''', 'STG', 'Application_Cities_NY', NULL, 0, NULL, NULL, 1, 1, 1),
-	('Src-Azure', 'WideWorldImporters-Standard', 'Application', 'DeliveryMethods', NULL, 'STG', 'Application_DeliveryMethods', NULL, 0, NULL, NULL, 1, 1, 1),
-	('Src-Azure', 'WideWorldImporters-Standard', 'Application', 'PaymentMethods', NULL, 'STG', 'Application_PaymentMethods', NULL, 0, NULL, NULL, 1, 1, 1),
-	('Src-Azure', 'WideWorldImporters-Standard', 'Application', 'People', NULL, 'STG', 'Application_People', NULL, 0, NULL, NULL, 1, 2, 1),
-	('Src-Azure', 'WideWorldImporters-Standard', 'Sales', 'Customers', NULL, 'STG', 'Sales_Customers', 'dbo.spLoad_Customer', 0, NULL, NULL, 1, 2, 1),
-	('Src-Azure', 'WideWorldImporters-Standard', 'Sales', 'Invoices', NULL, 'STG', 'Sales_Invoices', NULL, 1, 'LastEditedWhen', 'DATE', 1, 2, 1)
+	WHERE StateProvinceName = ''New York''', 'STG', 'Application_Cities_NY', NULL, 0, NULL, NULL),
+	('Src-Azure', 'WideWorldImporters-Standard', 'Application', 'DeliveryMethods', NULL, 'STG', 'Application_DeliveryMethods', NULL, 0, NULL, NULL),
+	('Src-Azure', 'WideWorldImporters-Standard', 'Application', 'PaymentMethods', NULL, 'STG', 'Application_PaymentMethods', NULL, 0, NULL, NULL),
+	('Src-Azure', 'WideWorldImporters-Standard', 'Application', 'People', NULL, 'STG', 'Application_People', NULL, 0, NULL, NULL),
+	('Src-Azure', 'WideWorldImporters-Standard', 'Sales', 'Customers', NULL, 'STG', 'Sales_Customers', 'dbo.spLoad_Customer', 0, NULL, NULL),
+	('Src-Azure', 'WideWorldImporters-Standard', 'Sales', 'Invoices', NULL, 'STG', 'Sales_Invoices', NULL, 1, 'LastEditedWhen', 'DATE')
 
 	--SELECT * FROM [UTIL].[DataLoadMetadata_FromTable_ToTable]
 END
