@@ -65,23 +65,24 @@
     }
   },
 
-    "variables": {
-        "image": "microsoft/azure-cli",
-        "userminame": "[concat(parameters('project-prefix'), 'umi')]",
-        "datalakename": "[concat(parameters('project-prefix'), 'datalake')]",
-        "adfkeyVaultName": "[concat(parameters('project-prefix'),'kv')]",
-        "adfstorageName": "[concat(parameters('project-prefix'),'storage')]",
-        "adfsqlserverName": "[concat(parameters('project-prefix'),'sql')]",
-        "adfDataFactoryName": "[concat(parameters('project-prefix'),'adf')]",
-        "hostingPlanName": "[concat(parameters('project-prefix'),'hostingplan')]",
-        "functionAppName": "[concat(parameters('project-prefix'),'fnapp')]",
-        "dbWorkspaceName": "[concat(parameters('project-prefix'),'databricks')]",
-        "containerInstanceName": "[concat(parameters('project-prefix'),'-containerinstance')]",
-        "managedResourceGroupName": "[concat('databricks-rg-', parameters('project-prefix'), '-', uniqueString(parameters('project-prefix'), resourceGroup().id))]",
-        "sourceonpremconnstr": "[concat('integrated security=False;data source=',parameters('onpremSourceServer'), ';initial catalog=@{linkedService().DBName};', 'user id=', parameters('onpremSourceUserID'), ';')]",
-        "sourceazureconnstr": "[concat('integrated security=False;data source=',parameters('azureSourceServer'), ';initial catalog=@{linkedService().DBName};', 'user id=', parameters('azureSourceUserID'), ';')]"
+  "variables": {
+    "image": "microsoft/azure-cli",
+    "userminame": "[concat(parameters('project-prefix'), 'umi')]",
+    "datalakename": "[concat(parameters('project-prefix'), 'datalake')]",
+    "adfkeyVaultName": "[concat(parameters('project-prefix'),'kv')]",
+    "adfstorageName": "[concat(parameters('project-prefix'),'storage')]",
+    "adfsqlserverName": "[concat(parameters('project-prefix'),'sql')]",
+    "adfDataFactoryName": "[concat(parameters('project-prefix'),'adf')]",
+    "adfDataFactoryName-dev": "[concat(parameters('project-prefix'),'adf-dev')]",
+    "hostingPlanName": "[concat(parameters('project-prefix'),'hostingplan')]",
+    "functionAppName": "[concat(parameters('project-prefix'),'fnapp')]",
+    "dbWorkspaceName": "[concat(parameters('project-prefix'),'databricks')]",
+    "containerInstanceName": "[concat(parameters('project-prefix'),'-containerinstance')]",
+    "managedResourceGroupName": "[concat('databricks-rg-', parameters('project-prefix'), '-', uniqueString(parameters('project-prefix'), resourceGroup().id))]",
+    "sourceonpremconnstr": "[concat('integrated security=False;data source=',parameters('onpremSourceServer'), ';initial catalog=@{linkedService().DBName};', 'user id=', parameters('onpremSourceUserID'), ';')]",
+    "sourceazureconnstr": "[concat('integrated security=False;data source=',parameters('azureSourceServer'), ';initial catalog=@{linkedService().DBName};', 'user id=', parameters('azureSourceUserID'), ';')]"
 
-    },
+  },
 
 
     "resources": [
@@ -93,7 +94,7 @@
             "apiVersion": "2014-04-01-preview",
             "dependsOn": [],
             "tags": {
-                "displayName": "adfsqlserver"
+                "displayName": "adf-sqlserver"
             },
             "properties": {
                 "administratorLogin": "[parameters('sqlserverAdminLogin')]",
@@ -140,7 +141,7 @@
                   "[resourceId('Microsoft.Sql/servers', variables('adfsqlserverName'))]"
                 ],
                 "tags": {
-                  "displayName": "datamart"
+                  "displayName": "adf-datamart"
                 },
                 "properties": {
                   "collation": "SQL_Latin1_General_CP1_CI_AS",
@@ -159,34 +160,52 @@
             "location": "[resourceGroup().location]"
         },
 
-        {
-            "type": "Microsoft.KeyVault/vaults",
-            "name": "[variables('adfkeyVaultName')]",
-            "apiVersion": "2018-02-14",
-            "location": "[resourceGroup().location]",
-            "properties": {
-                "sku": {
-                    "family": "A",
-                    "name": "Standard"
-                },
-                "tenantId": "[subscription().tenantId]",
-                "accessPolicies": [
-                ]
-            }
+      {
+        "type": "Microsoft.KeyVault/vaults",
+        "name": "[variables('adfkeyVaultName')]",
+        "apiVersion": "2018-02-14",
+        "location": "[resourceGroup().location]",
+        "tags": {
+          "displayName": "adf-keyvault"
         },
+        "properties": {
+          "sku": {
+            "family": "A",
+            "name": "Standard"
+          },
+          "tenantId": "[subscription().tenantId]",
+          "accessPolicies": [
+          ]
+        }
+      },
 
         {
             "name": "[variables('adfDataFactoryName')]",
             "type": "Microsoft.DataFactory/factories",
             "apiVersion": "2018-06-01",
             "location": "[resourceGroup().location]",
-            "tags": {},
+          "tags": {
+            "displayName": "adf-datafactory"
+          },
             "identity": {
                 "type": "systemAssigned"
             },
             "resources": []
         },
 
+      {
+        "name": "[variables('adfDataFactoryName-dev')]",
+        "type": "Microsoft.DataFactory/factories",
+        "apiVersion": "2018-06-01",
+        "location": "[resourceGroup().location]",
+        "tags": {
+          "displayName": "adf-datafactory-dev"
+        },
+        "identity": {
+          "type": "systemAssigned"
+        },
+        "resources": []
+      },
 
         {
             "type": "Microsoft.Storage/storageAccounts",
@@ -200,7 +219,7 @@
             "location": "[resourceGroup().location]",
             "tags": {
                 "Environment": "Development",
-                "DisplayName": "DataLake"
+                "displayName": "adf-datalake"
             },
             "scale": null,
             "properties": {
@@ -240,7 +259,7 @@
             },
             "dependsOn": [],
             "tags": {
-                "displayName": "adfstorage"
+                "displayName": "adf-storage"
             },
             "kind": "StorageV2",
             "resources": [
