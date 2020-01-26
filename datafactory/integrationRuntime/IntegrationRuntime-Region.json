@@ -1,0 +1,17 @@
+{
+	"name": "IntegrationRuntime-Region",
+	"properties": {
+		"type": "Managed",
+		"description": "Integration Runtime created in the same region as File Storage",
+		"typeProperties": {
+			"computeProperties": {
+				"location": "Southeast Asia",
+				"dataFlowProperties": {
+					"computeType": "General",
+					"coreCount": 8,
+					"timeToLiveInMinutes": 60
+				}
+			}
+		}
+	}
+}

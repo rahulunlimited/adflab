@@ -1,0 +1,28 @@
+{
+	"name": "LinkedServiceSourceOnPremDatabase",
+	"type": "Microsoft.DataFactory/factories/linkedservices",
+	"properties": {
+		"parameters": {
+			"DBName": {
+				"type": "String"
+			}
+		},
+		"annotations": [],
+		"type": "SqlServer",
+		"typeProperties": {
+			"connectionString": "integrated security=False;data source=AUMELNB21153;initial catalog=@{linkedService().DBName};user id=adsfuser;",
+			"password": {
+				"type": "AzureKeyVaultSecret",
+				"store": {
+					"referenceName": "LinkedServiceAzureKeyVault",
+					"type": "LinkedServiceReference"
+				},
+				"secretName": "db-source-onprem-pwd"
+			}
+		},
+		"connectVia": {
+			"referenceName": "OnPremRuntime",
+			"type": "IntegrationRuntimeReference"
+		}
+	}
+}
