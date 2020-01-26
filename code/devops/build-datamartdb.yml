@@ -5,7 +5,7 @@ trigger:
 
   paths:  
     include: 
-      - database/DataMart/*
+      - code/database/DataMart/*
 
 pool:
   name: Azure Pipelines
