@@ -5,6 +5,9 @@
     "project-prefix": {
       "value": "rgadflau01"
     },
+    "environment": {
+      "value": "dev"
+    },
     "ControlDB-database-name": {
       "value": "ControlDB"
     },

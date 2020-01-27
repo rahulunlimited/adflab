@@ -5,6 +5,10 @@
     "project-prefix": {
       "type": "string"
     },
+    "environment": {
+      "type": "string",
+      "defaultValue": "dev"
+    },
     "ControlDB-database-name": {
       "type": "string",
       "defaultValue": "ControlDB"
@@ -67,18 +71,19 @@
 
   "variables": {
     "image": "microsoft/azure-cli",
-    "userminame": "[concat(parameters('project-prefix'), 'umi')]",
-    "datalakename": "[concat(parameters('project-prefix'), 'datalake')]",
-    "adfkeyVaultName": "[concat(parameters('project-prefix'),'kv')]",
-    "adfstorageName": "[concat(parameters('project-prefix'),'storage')]",
-    "adfsqlserverName": "[concat(parameters('project-prefix'),'sql')]",
-    "adfDataFactoryName": "[concat(parameters('project-prefix'),'adf')]",
-    "adfDataFactoryName-dev": "[concat(parameters('project-prefix'),'adf-dev')]",
-    "hostingPlanName": "[concat(parameters('project-prefix'),'hostingplan')]",
-    "functionAppName": "[concat(parameters('project-prefix'),'fnapp')]",
-    "dbWorkspaceName": "[concat(parameters('project-prefix'),'databricks')]",
-    "containerInstanceName": "[concat(parameters('project-prefix'),'-containerinstance')]",
-    "managedResourceGroupName": "[concat('databricks-rg-', parameters('project-prefix'), '-', uniqueString(parameters('project-prefix'), resourceGroup().id))]",
+    "prefix": "[concat(parameters('project-prefix'),parameters('environment'))]",
+    "userminame": "[concat(variables('prefix'), 'umi')]",
+    "datalakename": "[concat(variables('prefix'), 'datalake')]",
+    "adfkeyVaultName": "[concat(variables('prefix'),'kv')]",
+    "adfstorageName": "[concat(variables('prefix'),'storage')]",
+    "adfsqlserverName": "[concat(variables('prefix'),'sql')]",
+    "adfDataFactoryName": "[concat(variables('prefix'),'adf')]",
+    "adfDataFactoryName-dev": "[concat(variables('prefix'),'adf-dev')]",
+    "hostingPlanName": "[concat(variables('prefix'),'hostingplan')]",
+    "functionAppName": "[concat(variables('prefix'),'fnapp')]",
+    "dbWorkspaceName": "[concat(variables('prefix'),'databricks')]",
+    "containerInstanceName": "[concat(variables('prefix'),'-containerinstance')]",
+    "managedResourceGroupName": "[concat('databricks-rg-', variables('prefix'), '-', uniqueString(parameters('project-prefix'), resourceGroup().id))]",
     "sourceonpremconnstr": "[concat('integrated security=False;data source=',parameters('onpremSourceServer'), ';initial catalog=@{linkedService().DBName};', 'user id=', parameters('onpremSourceUserID'), ';')]",
     "sourceazureconnstr": "[concat('integrated security=False;data source=',parameters('azureSourceServer'), ';initial catalog=@{linkedService().DBName};', 'user id=', parameters('azureSourceUserID'), ';')]"
 
