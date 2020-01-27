@@ -595,7 +595,7 @@
 
         {
             "type": "Microsoft.KeyVault/vaults/secrets",
-            "name": "[concat(variables('adfkeyVaultName'), '/', 'db-adflab-connstr')]",
+            "name": "[concat(variables('adfkeyVaultName'), '/', 'db-controldb-connstr')]",
             "apiVersion": "2015-06-01",
             "properties": {
                 "contentType": "text/plain",
@@ -605,8 +605,21 @@
                 "[resourceId('Microsoft.KeyVault/vaults', variables('adfkeyVaultName'))]",
                 "[resourceId('Microsoft.Sql/servers', variables('adfsqlserverName'))]"
             ]
-        }
+        },
 
+      {
+        "type": "Microsoft.KeyVault/vaults/secrets",
+        "name": "[concat(variables('adfkeyVaultName'), '/', 'db-datamart-connstr')]",
+        "apiVersion": "2015-06-01",
+        "properties": {
+          "contentType": "text/plain",
+          "value": "[concat('Integrated Security=False;Encrypt=True;Connection Timeout=30;', 'Data Source=', variables('adfsqlserverName'), '.database.windows.net;', 'Initial Catalog=' , parameters('ControlDB-database-name'), ';', 'User ID=', parameters('sqlserverAdminLogin'), ';Password=', parameters('sqlserverAdminPassword'))]"
+        },
+        "dependsOn": [
+          "[resourceId('Microsoft.KeyVault/vaults', variables('adfkeyVaultName'))]",
+          "[resourceId('Microsoft.Sql/servers', variables('adfsqlserverName'))]"
+        ]
+      }
 
     ],
     "outputs": {
