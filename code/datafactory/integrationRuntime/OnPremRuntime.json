@@ -1,0 +1,12 @@
+{
+	"name": "OnPremRuntime",
+	"properties": {
+		"type": "SelfHosted",
+		"typeProperties": {
+			"linkedInfo": {
+				"resourceId": "/subscriptions/ab908bd9-4099-4869-9111-8e2f703691c0/resourcegroups/RG-ADSFoundation/providers/Microsoft.DataFactory/factories/adsinra01-datafactory-dev/integrationruntimes/adsinra01-shir-dev",
+				"authorizationType": "Rbac"
+			}
+		}
+	}
+}
