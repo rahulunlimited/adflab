@@ -53,8 +53,8 @@ BEGIN
 		)
 	VALUES
 	('Src-Azure', 'WideWorldImporters-Standard', 'Application', 'Countries', NULL, 'STG', 'Application_Countries', 'dbo.spLoad_Country', 0, NULL, NULL), 
-	('Src-Azure', 'WideWorldImporters-Standard', 'Application', 'StateProvinces', NULL, 'STG', 'Application_StateProvinces', 'dbo.spLoad_StateProvince', 0, NULL, NULL), 
-	('Src-Azure', 'WideWorldImporters-Standard', 'Application', 'Cities', 'SELECT [CityID] ,[CityName] ,[StateProvinceID] ,CONVERT(varbinary(4000), [Location]) [Location] ,LatestRecordedPopulation ,[LastEditedBy] ,[ValidFrom] ,[ValidTo] FROM [Application].[Cities]', 'STG', 'Application_Cities', 'dbo.spLoad_City', 0, NULL, NULL),
+	('Src-Azure', 'WideWorldImporters-Standard', 'Application', 'StateProvinces', NULL, 'STG', 'Application_StateProvinces', '', 0, NULL, NULL), 
+	('Src-Azure', 'WideWorldImporters-Standard', 'Application', 'Cities', 'SELECT [CityID] ,[CityName] ,[StateProvinceID] ,CONVERT(varbinary(4000), [Location]) [Location] ,LatestRecordedPopulation ,[LastEditedBy] ,[ValidFrom] ,[ValidTo] FROM [Application].[Cities]', 'STG', 'Application_Cities', '', 0, NULL, NULL),
 	('Src-Azure', 'WideWorldImporters-Standard', 'Application', 'CitiesNY', 'SELECT  C.*
 	FROM [Application].Cities C
 	INNER JOIN [Application].StateProvinces S ON S.StateProvinceID = C.StateProvinceID
@@ -116,7 +116,7 @@ BEGIN
 	)
 
 	VALUES 
-	('Az-FileStorage', 'AUS-State.csv', 'STG', 'CSV_AusState', 'dbo.spLoad_StateProvince_Ext', ',', '\r\n', 1, 1, 'src', 'dest')
+	('Az-FileStorage', 'AUS-State.csv', 'STG', 'CSV_AusState', '', ',', '\r\n', 1, 1, 'src', 'dest')
 END
 
 IF NOT EXISTS (SELECT * FROM [UTIL].[DataLoadMetadata_FromFile_ToTable] WHERE SourceSystem = 'ADLS')
