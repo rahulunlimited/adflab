@@ -4,7 +4,7 @@
 		"annotations": [],
 		"type": "AzureFunction",
 		"typeProperties": {
-			"functionAppUrl": "https://rgadflaudev01fnapp.azurewebsites.net",
+			"functionAppUrl": "https://rgadflaud01devfnapp.azurewebsites.net",
 			"functionKey": {
 				"type": "AzureKeyVaultSecret",
 				"store": {
