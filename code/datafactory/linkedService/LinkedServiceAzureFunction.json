@@ -1,11 +1,10 @@
 {
 	"name": "LinkedServiceAzureFunction",
-	"type": "Microsoft.DataFactory/factories/linkedservices",
 	"properties": {
 		"annotations": [],
 		"type": "AzureFunction",
 		"typeProperties": {
-			"functionAppUrl": "https://rgadfl01fnapp.azurewebsites.net",
+			"functionAppUrl": "https://rgadflaudev01fnapp.azurewebsites.net",
 			"functionKey": {
 				"type": "AzureKeyVaultSecret",
 				"store": {
@@ -15,5 +14,6 @@
 				"secretName": "azurefunction-fileservice-key"
 			}
 		}
-	}
+	},
+	"type": "Microsoft.DataFactory/factories/linkedservices"
 }
