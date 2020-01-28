@@ -4,13 +4,14 @@
 	"properties": {
 		"parameters": {
 			"DBName": {
-				"type": "String"
+				"type": "String",
+				"defaultValue": "WideWorldImporters-Standard"
 			}
 		},
 		"annotations": [],
 		"type": "AzureSqlDatabase",
 		"typeProperties": {
-			"connectionString": "integrated security=False;data source=ralearnsql.database.windows.net;initial catalog=@{linkedService().DBName};user id=sqladmin;",
+			"connectionString": "Integrated Security=False;Encrypt=True;Connection Timeout=30;Data Source=ralearnsql.database.windows.net;Initial Catalog=@{linkedService().DBName};User ID=sqladmin",
 			"password": {
 				"type": "AzureKeyVaultSecret",
 				"store": {
