@@ -29,8 +29,8 @@ BEGIN
 		,[IncrementalLoadColumnType]
 		)
 	VALUES 
-	('Src-OnPrem', 'AdventureWorks2014', 'HumanResources', 'Department', NULL, 'STG', 'HumanResources_Department', NULL, 0, NULL, NULL), 
-	('Src-OnPrem', 'AdventureWorks2014', 'Production', 'WorkOrder', NULL, 'STG', 'Production_WorkOrder', NULL, 1, 'ModifiedDate', 'DATE') 
+	('Src-OnPrem', 'AdventureWorks2017', 'HumanResources', 'Department', NULL, 'STG', 'HumanResources_Department', NULL, 0, NULL, NULL), 
+	('Src-OnPrem', 'AdventureWorks2017', 'Production', 'WorkOrder', NULL, 'STG', 'Production_WorkOrder', NULL, 1, 'ModifiedDate', 'DATE') 
 END
 
 IF NOT EXISTS(SELECT * FROM [UTIL].[DataLoadMetadata_FromTable_ToTable] WHERE SourceSystem = 'Src-Azure')
@@ -89,8 +89,8 @@ BEGIN
 		,[ColumnDelimiter]
 		,[RowDelimiter])
 	VALUES 
-	('Src-OnPrem', 'AdventureWorks2014', 'HumanResources', 'Department', NULL, 'ADLS',  'HRDepartment', 'HumanResources_Department', 0, NULL, NULL, ',', '\r\n'), 
-	('Src-OnPrem', 'AdventureWorks2014', 'Production', 'WorkOrder', NULL, 'ADLS',  'WorkOrder', 'WorkOrder', 1, 'ModifiedDate', 'DATE', ',', '\r\n'),
+	('Src-OnPrem', 'AdventureWorks2017', 'HumanResources', 'Department', NULL, 'ADLS',  'HRDepartment', 'HumanResources_Department', 0, NULL, NULL, ',', '\r\n'), 
+	('Src-OnPrem', 'AdventureWorks2017', 'Production', 'WorkOrder', NULL, 'ADLS',  'WorkOrder', 'WorkOrder', 1, 'ModifiedDate', 'DATE', ',', '\r\n'),
 	('Src-Azure', 'WideWorldImporters-Standard', 'Sales', 'Invoices', NULL, 'ADLS',  'Sales', 'Invoices', 1, 'LastEditedWhen', 'DATE', '|', '\r\n')
 
 	--SELECT * FROM [UTIL].DataLoadMetadata_FromTable_ToFile
