@@ -1,11 +1,10 @@
 {
 	"name": "LinkedServiceAzureDLGen2Storage",
-	"type": "Microsoft.DataFactory/factories/linkedservices",
 	"properties": {
 		"annotations": [],
 		"type": "AzureBlobFS",
 		"typeProperties": {
-			"url": "https://rgadfl01datalake.dfs.core.windows.net",
+			"url": "https://rgadflau01devdatalake.dfs.core.windows.net",
 			"accountKey": {
 				"type": "AzureKeyVaultSecret",
 				"store": {
@@ -15,5 +14,6 @@
 				"secretName": "datalake-storage-key"
 			}
 		}
-	}
+	},
+	"type": "Microsoft.DataFactory/factories/linkedservices"
 }

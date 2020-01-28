@@ -10,7 +10,7 @@
 		"annotations": [],
 		"type": "SqlServer",
 		"typeProperties": {
-			"connectionString": "integrated security=False;data source=AUMELNB21153;initial catalog=@{linkedService().DBName};user id=adsfuser;",
+			"connectionString": "Integrated Security=False;Data Source=AUMELNB21153;Initial Catalog=@{linkedService().DBName};User ID=adsfuser",
 			"password": {
 				"type": "AzureKeyVaultSecret",
 				"store": {

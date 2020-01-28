@@ -242,7 +242,7 @@
 								}
 							},
 							"linkedServiceName": {
-								"referenceName": "LinkedServiceControlDB",
+								"referenceName": "LinkedServiceDataMart",
 								"type": "LinkedServiceReference"
 							}
 						}
