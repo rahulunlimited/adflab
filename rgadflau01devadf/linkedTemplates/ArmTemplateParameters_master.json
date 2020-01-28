@@ -50,6 +50,9 @@
 		"LinkedServiceDataMart_properties_typeProperties_connectionString_secretName": {
 			"value": "db-datamart-connstr"
 		},
+		"OnPremRuntime_properties_typeProperties_linkedInfo_resourceId": {
+			"value": "/subscriptions/ab908bd9-4099-4869-9111-8e2f703691c0/resourcegroups/RG-ADSFoundation/providers/Microsoft.DataFactory/factories/adsinra01-datafactory-dev/integrationruntimes/adsinra01-shir-dev"
+		},
 		"containerUri": {
 			"value": ""
 		},

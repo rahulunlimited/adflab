@@ -64,6 +64,10 @@
 			"type": "string",
 			"defaultValue": "db-datamart-connstr"
 		},
+		"OnPremRuntime_properties_typeProperties_linkedInfo_resourceId": {
+			"type": "string",
+			"defaultValue": "/subscriptions/ab908bd9-4099-4869-9111-8e2f703691c0/resourcegroups/RG-ADSFoundation/providers/Microsoft.DataFactory/factories/adsinra01-datafactory-dev/integrationruntimes/adsinra01-shir-dev"
+		},
 		"containerUri": {
 			"type": "string",
 			"metadata": "URI to storage account containing linked ARM templates"
@@ -99,6 +103,9 @@
 					},
 					"LinkedServiceAzureKeyVault_properties_typeProperties_baseUrl": {
 						"value": "[parameters('LinkedServiceAzureKeyVault_properties_typeProperties_baseUrl')]"
+					},
+					"OnPremRuntime_properties_typeProperties_linkedInfo_resourceId": {
+						"value": "[parameters('OnPremRuntime_properties_typeProperties_linkedInfo_resourceId')]"
 					},
 					"LinkedServiceAzureBlobStorage_properties_typeProperties_connectionString_secretName": {
 						"value": "[parameters('LinkedServiceAzureBlobStorage_properties_typeProperties_connectionString_secretName')]"

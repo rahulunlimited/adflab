@@ -19,6 +19,10 @@
 			"type": "string",
 			"defaultValue": "https://rgadflau01devkv.vault.azure.net/"
 		},
+		"OnPremRuntime_properties_typeProperties_linkedInfo_resourceId": {
+			"type": "string",
+			"defaultValue": "/subscriptions/ab908bd9-4099-4869-9111-8e2f703691c0/resourcegroups/RG-ADSFoundation/providers/Microsoft.DataFactory/factories/adsinra01-datafactory-dev/integrationruntimes/adsinra01-shir-dev"
+		},
 		"LinkedServiceAzureBlobStorage_properties_typeProperties_connectionString_secretName": {
 			"type": "string",
 			"defaultValue": "blob-connection-string"
@@ -83,16 +87,6 @@
 			"dependsOn": []
 		},
 		{
-			"name": "[concat(parameters('factoryName'), '/OnPremRuntime')]",
-			"type": "Microsoft.DataFactory/factories/integrationRuntimes",
-			"apiVersion": "2018-06-01",
-			"properties": {
-				"type": "SelfHosted",
-				"typeProperties": {}
-			},
-			"dependsOn": []
-		},
-		{
 			"name": "[concat(parameters('factoryName'), '/IntegrationRuntime-Region')]",
 			"type": "Microsoft.DataFactory/factories/integrationRuntimes",
 			"apiVersion": "2018-06-01",
@@ -106,6 +100,21 @@
 							"coreCount": 8,
 							"timeToLive": 0
 						}
+					}
+				}
+			},
+			"dependsOn": []
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/OnPremRuntime')]",
+			"type": "Microsoft.DataFactory/factories/integrationRuntimes",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"type": "SelfHosted",
+				"typeProperties": {
+					"linkedInfo": {
+						"resourceId": "[parameters('OnPremRuntime_properties_typeProperties_linkedInfo_resourceId')]",
+						"authorizationType": "Rbac"
 					}
 				}
 			},
