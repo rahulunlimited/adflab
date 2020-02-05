@@ -14,12 +14,12 @@
 - Use Azure CLI and PowerShell to configure the resources
 
 ## High Level Archicture
-![Framework](https://github.com/rahulunlimited/adflab/blob/master/images/framework-arch.JPG)
+![Framework](https://github.com/rahulunlimited/adflab/blob/master/docs/images/framework-arch.JPG)
 
 ## Deployment Details
-![Deploy1](https://github.com/rahulunlimited/adflab/blob/master/images/deploy-1.JPG)
+![Deploy1](https://github.com/rahulunlimited/adflab/blob/master/docs/images/deploy-1.JPG)
 
-![Deploy1](https://github.com/rahulunlimited/adflab/blob/master/images/deploy-2.JPG)
+![Deploy1](https://github.com/rahulunlimited/adflab/blob/master/docs/images/deploy-2.JPG)
 
 ## Databricks and KeyVault Configuration
-![Deploy1](https://github.com/rahulunlimited/adflab/blob/master/images/databricks-config.JPG)
+![Deploy1](https://github.com/rahulunlimited/adflab/blob/master/docs/images/databricks-config.JPG)
